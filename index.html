@@ -23,7 +23,7 @@ button { cursor:pointer; }
 #hall-header { height:60px; background:#202c33; display:flex; align-items:center; justify-content:center; color:#e9edef; font-size:16px; flex-shrink:0; }
 #contacts { flex:1; overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:8px; }
 .contact-card { background:#111b21; padding:10px; border-radius:10px; display:flex; align-items:center; gap:10px; cursor:pointer; }
-.avatar { width:40px; height:40px; border-radius:50%; background:#25d366; color:white; font-weight:bold; font-size:20px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.avatar { width:40px; height:40px; border-radius:50%; background:#25d366; color:white; font-weight:bold; font-size:24px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 
 /* ----- CHAT PAGE ----- */
 #chat-page { display:none; height:100%; width:100%; flex-direction:column; }
@@ -104,20 +104,30 @@ let currentChatId = null;
 // ===== STEP FUNCTIONS =====
 async function nextPhone() {
   const phone = document.getElementById("phone").value.trim();
-  if(!phone) return alert("Enter phone number");
+  if(!phone) return alert("Enter a valid phone number");
 
-  const userRef = doc(db,"users",phone);
-  const userSnap = await getDoc(userRef);
-  if(userSnap.exists()) {
-    // Existing user → go password step
-    currentUser = { phone, username: userSnap.data().username };
-    document.getElementById("step-phone").style.display = "none";
-    document.getElementById("step-password").style.display = "flex";
-  } else {
-    // New user → go username step
-    currentUser = { phone };
-    document.getElementById("step-phone").style.display = "none";
-    document.getElementById("step-username").style.display = "flex";
+  // Basic phone validation
+  const phonePattern = /^\+?\d{10,15}$/;
+  if(!phonePattern.test(phone)) return alert("Enter a valid phone number with country code");
+
+  try {
+    const userRef = doc(db,"users",phone);
+    const userSnap = await getDoc(userRef);
+
+    if(userSnap.exists()) {
+      // Existing user → go to password step
+      currentUser = { phone, username: userSnap.data().username };
+      document.getElementById("step-phone").style.display = "none";
+      document.getElementById("step-password").style.display = "flex";
+    } else {
+      // New user → go to username step
+      currentUser = { phone };
+      document.getElementById("step-phone").style.display = "none";
+      document.getElementById("step-username").style.display = "flex";
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Error accessing database. Check your connection.");
   }
 }
 
@@ -135,11 +145,20 @@ async function finishRegistration() {
   currentUser.password = password;
 
   const userRef = doc(db,"users",currentUser.phone);
-  await setDoc(userRef,{
-    username: currentUser.username,
-    password: currentUser.password,
-    contacts:[]
-  });
+  const userSnap = await getDoc(userRef);
+
+  if(!userSnap.exists()){
+    // New user → register
+    await setDoc(userRef,{
+      username: currentUser.username,
+      password: currentUser.password,
+      contacts:[]
+    });
+  } else {
+    // Existing user → validate password
+    if(userSnap.data().password !== password) return alert("Wrong password");
+    currentUser.username = userSnap.data().username;
+  }
 
   openChatHall();
 }
@@ -160,6 +179,7 @@ async function openChatHall() {
   contactsDiv.innerHTML = "";
   for(let phone of contacts) {
     const cSnap = await getDoc(doc(db,"users",phone));
+    if(!cSnap.exists()) continue;
     const contact = cSnap.data();
     const div = document.createElement("div");
     div.className = "contact-card";
