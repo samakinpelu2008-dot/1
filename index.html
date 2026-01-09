@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>WhatsApp Style Auth Chat</title>
+<title>WhatsApp Style Chat</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <style>
 * { box-sizing: border-box; }
@@ -17,18 +17,6 @@ button { cursor:pointer; }
 .login-card { width:90%; max-width:400px; background:#111b21; padding:30px; border-radius:12px; display:flex; flex-direction:column; gap:15px; }
 .login-card input { padding:12px; border-radius:8px; background:#202c33; color:white; }
 .login-card button { padding:12px; border-radius:8px; background:#25d366; font-weight:bold; }
-
-/* ----- OTP PAGE ----- */
-#otp-page { display:none; justify-content:center; align-items:center; height:100%; }
-.otp-card { width:90%; max-width:400px; background:#111b21; padding:30px; border-radius:12px; display:flex; flex-direction:column; gap:15px; }
-.otp-card input { padding:12px; border-radius:8px; background:#202c33; color:white; }
-.otp-card button { padding:12px; border-radius:8px; background:#25d366; font-weight:bold; }
-
-/* ----- USERNAME PAGE ----- */
-#username-page { display:none; justify-content:center; align-items:center; height:100%; }
-.username-card { width:90%; max-width:400px; background:#111b21; padding:30px; border-radius:12px; display:flex; flex-direction:column; gap:15px; }
-.username-card input { padding:12px; border-radius:8px; background:#202c33; color:white; }
-.username-card button { padding:12px; border-radius:8px; background:#25d366; font-weight:bold; }
 
 /* ----- CHAT PAGE ----- */
 #chat-page { display:none; height:100%; width:100%; flex-direction:column; }
@@ -48,28 +36,11 @@ button { cursor:pointer; }
 <!-- LOGIN -->
 <div id="login-page">
   <div class="login-card">
-    <h2>Login</h2>
-    <input type="text" id="phone" placeholder="+2341234567890">
-    <div id="recaptcha-container"></div>
-    <button onclick="sendOTP()">Send OTP</button>
-  </div>
-</div>
-
-<!-- OTP -->
-<div id="otp-page">
-  <div class="otp-card">
-    <h2>Enter OTP</h2>
-    <input type="text" id="otp" placeholder="6-digit code">
-    <button onclick="verifyOTP()">Verify OTP</button>
-  </div>
-</div>
-
-<!-- USERNAME -->
-<div id="username-page">
-  <div class="username-card">
-    <h2>Set Username</h2>
+    <h2>Create Account / Login</h2>
+    <input type="text" id="phone" placeholder="Enter phone number">
     <input type="text" id="username" placeholder="Enter username">
-    <button onclick="setUsername()">Continue</button>
+    <input type="password" id="password" placeholder="Set password">
+    <button onclick="loginUser()">Continue</button>
   </div>
 </div>
 
@@ -86,7 +57,6 @@ button { cursor:pointer; }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, setDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 // CONFIG
 const firebaseConfig = {
@@ -100,83 +70,61 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const auth = getAuth(app);
 
-let confirmationResult;
 let currentUser = null;
 
-// ===== LOGIN =====
-window.sendOTP = () => {
-  const phone = document.getElementById("phone").value;
-  if (!phone) return alert("Enter phone number");
-  window.recaptchaVerifier = new RecaptchaVerifier('recaptcha-container', {size: 'invisible'}, auth);
-  signInWithPhoneNumber(auth, phone, window.recaptchaVerifier)
-    .then(result => {
-      confirmationResult = result;
-      document.getElementById("login-page").style.display = "none";
-      document.getElementById("otp-page").style.display = "flex";
-    })
-    .catch(err => alert(err));
-};
-
-// ===== VERIFY OTP =====
-window.verifyOTP = () => {
-  const code = document.getElementById("otp").value;
-  if (!code) return alert("Enter OTP");
-  confirmationResult.confirm(code)
-    .then(async result => {
-      currentUser = result.user;
-      const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-      if (userDoc.exists()) {
-        // Existing user → go to chat
-        startChat(userDoc.data().username);
-      } else {
-        // New user → set username
-        document.getElementById("otp-page").style.display = "none";
-        document.getElementById("username-page").style.display = "flex";
-      }
-    })
-    .catch(err => alert(err));
-};
-
-// ===== SET USERNAME =====
-window.setUsername = async () => {
+// ===== LOGIN / REGISTER =====
+window.loginUser = async () => {
+  const phone = document.getElementById("phone").value.trim();
   const username = document.getElementById("username").value.trim();
-  if (!username) return alert("Enter username");
-  await setDoc(doc(db, "users", currentUser.uid), { username });
-  startChat(username);
-};
+  const password = document.getElementById("password").value.trim();
+  if(!phone || !username || !password) return alert("Fill all fields");
 
-// ===== CHAT =====
-function startChat(username) {
-  document.getElementById("username-page").style.display = "none";
+  const userRef = doc(db, "users", phone);
+  const userSnap = await getDoc(userRef);
+
+  if(userSnap.exists()) {
+    // LOGIN
+    const data = userSnap.data();
+    if(data.password !== password) return alert("Wrong password");
+    currentUser = { phone, username: data.username };
+  } else {
+    // REGISTER
+    await setDoc(userRef, { username, password });
+    currentUser = { phone, username };
+  }
+
+  // Go to chat
+  document.getElementById("login-page").style.display = "none";
   document.getElementById("chat-page").style.display = "flex";
-  document.getElementById("header-user").innerText = username;
-  
+  document.getElementById("header-user").innerText = currentUser.username;
+
+  // Start chat listener
   const messagesRef = collection(db, "chats");
   const q = query(messagesRef, orderBy("time"));
-  
+
   onSnapshot(q, snap => {
     const messagesBox = document.getElementById("messages");
     messagesBox.innerHTML = "";
     snap.forEach(docSnap => {
       const msg = docSnap.data();
       const div = document.createElement("div");
-      div.className = "message " + (msg.uid === currentUser.uid ? "me" : "them");
+      div.className = "message " + (msg.phone === currentUser.phone ? "me" : "them");
       div.innerHTML = `<div class="avatar">${msg.username[0].toUpperCase()}</div>${msg.text}`;
       messagesBox.appendChild(div);
     });
     messagesBox.scrollTop = messagesBox.scrollHeight;
   });
-}
+};
 
+// ===== SEND MESSAGE =====
 window.sendMessage = async () => {
   const input = document.getElementById("messageInput");
-  if (!input.value) return;
+  if(!input.value) return;
   await addDoc(collection(db, "chats"), {
     text: input.value,
-    uid: currentUser.uid,
-    username: (await getDoc(doc(db,"users",currentUser.uid))).data().username,
+    phone: currentUser.phone,
+    username: currentUser.username,
     time: Date.now()
   });
   input.value = "";
