@@ -2,83 +2,134 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Simple Firebase Chat</title>
+<title>Firebase Chat</title>
 <style>
+* {
+  box-sizing: border-box;
+}
+
 body {
+  margin: 0;
   font-family: Arial, sans-serif;
-  background: #0f172a;
+  background: #0b141a;
   color: white;
+  height: 100vh;
+}
+
+#home, #chat {
+  height: 100vh;
   display: flex;
+  flex-direction: column;
+}
+
+#home {
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  margin: 0;
+  padding: 20px;
 }
-.container {
-  width: 350px;
-  background: #020617;
+
+.home-box {
+  width: 100%;
+  max-width: 400px;
+  background: #111b21;
+  padding: 20px;
   border-radius: 10px;
-  padding: 15px;
 }
-h2 { text-align: center; }
+
 button {
   width: 100%;
-  padding: 10px;
-  margin-top: 8px;
-  background: #2563eb;
+  padding: 12px;
+  margin-top: 10px;
+  background: #25d366;
   border: none;
-  color: white;
-  border-radius: 5px;
+  color: black;
+  border-radius: 6px;
+  font-size: 16px;
   cursor: pointer;
 }
+
 input {
   width: 100%;
-  padding: 8px;
-  margin-top: 8px;
-  border-radius: 5px;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 6px;
   border: none;
+  font-size: 14px;
 }
+
 #chat {
   display: none;
 }
-#messages {
-  height: 200px;
-  overflow-y: auto;
-  background: #020617;
-  padding: 8px;
-  border-radius: 5px;
-  margin-bottom: 8px;
-}
-.msg {
-  margin-bottom: 6px;
-  font-size: 14px;
-}
-.room {
+
+.header {
+  padding: 15px;
+  background: #202c33;
   text-align: center;
-  font-size: 12px;
-  color: #94a3b8;
+  font-size: 14px;
+  color: #aebac1;
+}
+
+#messages {
+  flex: 1;
+  padding: 15px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.message {
+  max-width: 70%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.me {
+  align-self: flex-end;
+  background: #005c4b;
+  border-bottom-right-radius: 2px;
+}
+
+.them {
+  align-self: flex-start;
+  background: #202c33;
+  border-bottom-left-radius: 2px;
+}
+
+.input-box {
+  display: flex;
+  padding: 10px;
+  background: #202c33;
+  gap: 8px;
+}
+
+.input-box input {
+  flex: 1;
 }
 </style>
 </head>
 <body>
 
-<div class="container">
-  <div id="home">
-    <h2>Chat Room</h2>
+<div id="home">
+  <div class="home-box">
+    <h2 style="text-align:center;">Chat Room</h2>
     <button onclick="createRoom()">Create Chat</button>
     <input id="roomInput" placeholder="Enter room code">
     <button onclick="joinRoom()">Join Chat</button>
   </div>
+</div>
 
-  <div id="chat">
-    <div class="room" id="roomCode"></div>
-    <div id="messages"></div>
-    <input id="messageInput" placeholder="Type message">
+<div id="chat">
+  <div class="header" id="roomCode"></div>
+  <div id="messages"></div>
+  <div class="input-box">
+    <input id="messageInput" placeholder="Type a message">
     <button onclick="sendMessage()">Send</button>
   </div>
 </div>
 
-<!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
@@ -107,16 +158,16 @@ window.createRoom = () => {
 };
 
 window.joinRoom = () => {
-  const input = document.getElementById("roomInput").value.trim();
-  if (!input) return alert("Enter room code");
-  roomId = input.toUpperCase();
+  const code = document.getElementById("roomInput").value.trim();
+  if (!code) return alert("Enter room code");
+  roomId = code.toUpperCase();
   startChat();
 };
 
 function startChat() {
   document.getElementById("home").style.display = "none";
-  document.getElementById("chat").style.display = "block";
-  document.getElementById("roomCode").innerText = "Room: " + roomId;
+  document.getElementById("chat").style.display = "flex";
+  document.getElementById("roomCode").innerText = "Room Code: " + roomId;
 
   const q = query(
     collection(db, "rooms", roomId, "messages"),
@@ -129,8 +180,8 @@ function startChat() {
     snap.forEach(doc => {
       const d = doc.data();
       const div = document.createElement("div");
-      div.className = "msg";
-      div.textContent = (d.user === userId ? "You: " : "Them: ") + d.text;
+      div.className = "message " + (d.user === userId ? "me" : "them");
+      div.textContent = d.text;
       messages.appendChild(div);
       messages.scrollTop = messages.scrollHeight;
     });
