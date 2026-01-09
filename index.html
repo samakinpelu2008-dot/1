@@ -1,123 +1,107 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>FIR Chat</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>IEM Chat</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-* { box-sizing: border-box; }
-html, body {
-  margin:0;
-  width:100%;
-  height:100%;
-  font-family: system-ui, sans-serif;
-  background:#0b141a;
-  color:#e9edef;
-  overflow:hidden;
-}
+*{box-sizing:border-box;font-family:Arial}
+body,html{margin:0;height:100%;background:#0b141a;color:white;overflow:hidden}
+input,button{padding:12px;border:none;border-radius:20px}
+button{background:#25d366;color:black;font-weight:bold;cursor:pointer}
+.screen{display:none;height:100%;width:100%}
+.center{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:15px}
 
-/* ---------- COMMON ---------- */
-button, input {
-  border:none;
-  outline:none;
-  font-size:16px;
-}
-button {
-  background:#25d366;
-  padding:12px;
-  border-radius:8px;
-  font-weight:bold;
-  cursor:pointer;
-}
-input {
-  padding:14px;
-  border-radius:8px;
-  background:#202c33;
-  color:white;
-}
-
-/* ---------- PAGES ---------- */
-.page {
-  display:none;
-  height:100%;
-  width:100%;
-  justify-content:center;
-  align-items:center;
-}
-
-.card {
-  width:90%;
-  max-width:420px;
-  background:#111b21;
-  padding:30px;
-  border-radius:12px;
-  display:flex;
-  flex-direction:column;
-  gap:16px;
-}
-
-/* ---------- CHAT HALL ---------- */
-#hall {
-  display:none;
-  flex-direction:column;
-  height:100%;
-}
-
-.header {
+.header{
   height:60px;
   background:#202c33;
   display:flex;
   align-items:center;
   padding:0 15px;
-  font-weight:bold;
+  gap:15px;
 }
 
-.avatar {
-  width:48px;
-  height:48px;
-  border-radius:50%;
+.list{overflow-y:auto;height:calc(100% - 60px)}
+.contact{
+  padding:15px;
+  border-bottom:1px solid #333;
+  display:flex;
+  align-items:center;
+  gap:15px;
+  cursor:pointer;
+}
+.avatar{
+  width:45px;height:45px;
   background:#25d366;
+  border-radius:50%;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:28px;
-  font-weight:900;
-  color:white;
+  font-size:22px;
+  font-weight:bold;
+  color:black;
 }
+
+.message{
+  max-width:70%;
+  padding:10px;
+  border-radius:10px;
+  margin:6px;
+}
+.me{background:#25d366;color:black;margin-left:auto}
+.other{background:#202c33}
+
+#messages{flex:1;overflow-y:auto;padding:10px}
+.inputBar{
+  display:flex;
+  padding:10px;
+  gap:10px;
+  background:#202c33;
+}
+input{flex:1}
 </style>
 </head>
 
 <body>
 
 <!-- LOGIN -->
-<div id="login" class="page" style="display:flex;">
-  <div class="card">
-    <h2>Login</h2>
-    <input id="loginEmail" placeholder="Email">
-    <input id="loginPassword" type="password" placeholder="Password">
-    <button onclick="login()">Login</button>
-    <p onclick="goRegister()" style="cursor:pointer;">Create account</p>
-  </div>
-</div>
-
-<!-- REGISTER -->
-<div id="register" class="page">
-  <div class="card">
-    <h2>Register</h2>
-    <input id="regEmail" placeholder="Email">
-    <input id="regPassword" type="password" placeholder="Password">
-    <input id="regUsername" placeholder="Username">
-    <button onclick="register()">Create Account</button>
-  </div>
+<div id="login" class="screen center">
+  <h2>Register / Login</h2>
+  <input id="email" placeholder="Email">
+  <input id="password" placeholder="Password" type="password">
+  <input id="username" placeholder="Username">
+  <button onclick="register()">Continue</button>
 </div>
 
 <!-- CHAT HALL -->
-<div id="hall">
+<div id="hall" class="screen">
   <div class="header">
-    <div id="hallAvatar" class="avatar"></div>
-    <span id="hallName" style="margin-left:12px;"></span>
+    <b>IEM Chat</b>
+    <span style="margin-left:auto;cursor:pointer" onclick="addContact()">➕</span>
   </div>
+  <div id="contacts" class="list"></div>
+</div>
+
+<!-- CHAT -->
+<div id="chat" class="screen" style="display:flex;flex-direction:column">
+  <div class="header">
+    <span onclick="back()">←</span>
+    <b id="chatName"></b>
+  </div>
+  <div id="messages"></div>
+  <div class="inputBar">
+    <input id="msg">
+    <button onclick="send()">Send</button>
+  </div>
+</div>
+
+<!-- ADD CONTACT -->
+<div id="add" class="screen center">
+  <h3>Add Contact</h3>
+  <input id="contactId" placeholder="User ID">
+  <button onclick="saveContact()">Save</button>
+  <button onclick="show('hall')">Cancel</button>
 </div>
 
 <script type="module">
@@ -128,19 +112,18 @@ import {
   signInWithEmailAndPassword,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
 import {
   getFirestore,
-  doc,
-  setDoc,
-  getDoc,
-  serverTimestamp
+  doc,setDoc,getDoc,addDoc,
+  collection,onSnapshot,query,orderBy,serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDCBD2gVIg9v-KqYaMFZeu_grgs3yKYfPs",
   authDomain: "fir-chat-f8d55.firebaseapp.com",
   projectId: "fir-chat-f8d55",
-  storageBucket: "fir-chat-f8d55.firebasestorage.app",
+  storageBucket: "fir-chat-f8d55.appspot.com",
   messagingSenderId: "792896094694",
   appId: "1:792896094694:web:dd373e5d7d2fc9ae1d5627"
 };
@@ -149,62 +132,104 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* ---------- NAV ---------- */
+let myUID,myUserId,currentChat;
+
+/* UI */
 function show(id){
-  document.querySelectorAll(".page,#hall").forEach(p=>p.style.display="none");
+  document.querySelectorAll(".screen").forEach(s=>s.style.display="none");
   document.getElementById(id).style.display="flex";
 }
+show("login");
 
-window.goRegister = () => show("register");
-
-/* ---------- REGISTER ---------- */
-window.register = async () => {
-  const email = regEmail.value.trim();
-  const password = regPassword.value.trim();
-  const username = regUsername.value.trim();
-
-  if(!email || !password || !username) {
-    alert("Fill all fields");
-    return;
+/* REGISTER / LOGIN */
+window.register = async()=>{
+  const e=email.value,p=password.value,u=username.value;
+  try{
+    const r=await createUserWithEmailAndPassword(auth,e,p);
+    const uid=r.user.uid;
+    const userId=u.slice(0,4).toUpperCase()+"-"+Math.floor(10000+Math.random()*90000);
+    await setDoc(doc(db,"users",uid),{username:u,userId});
+  }catch{
+    await signInWithEmailAndPassword(auth,e,p);
   }
-
-  const cred = await createUserWithEmailAndPassword(auth, email, password);
-  const uid = cred.user.uid;
-
-  await setDoc(doc(db,"users",uid),{
-    email,
-    username,
-    searchKey: username.toLowerCase(),
-    createdAt: serverTimestamp()
-  });
-
-  loadHall(username);
 };
 
-/* ---------- LOGIN ---------- */
-window.login = async () => {
-  const email = loginEmail.value.trim();
-  const password = loginPassword.value.trim();
-  await signInWithEmailAndPassword(auth,email,password);
-};
-
-/* ---------- SESSION ---------- */
-onAuthStateChanged(auth, async user=>{
-  if(user){
-    const snap = await getDoc(doc(db,"users",user.uid));
-    if(snap.exists()){
-      loadHall(snap.data().username);
-    }
-  }
+/* AUTH STATE */
+onAuthStateChanged(auth,async u=>{
+  if(!u)return;
+  myUID=u.uid;
+  const snap=await getDoc(doc(db,"users",myUID));
+  myUserId=snap.data().userId;
+  loadContacts();
+  show("hall");
 });
 
-/* ---------- CHAT HALL ---------- */
-function loadHall(username){
-  show("hall");
-  hallAvatar.textContent = username[0].toUpperCase();
-  hallName.textContent = username;
+/* CONTACTS */
+function loadContacts(){
+  onSnapshot(collection(db,"contacts",myUID,"list"),snap=>{
+    contacts.innerHTML="";
+    snap.forEach(d=>{
+      const c=d.data();
+      const div=document.createElement("div");
+      div.className="contact";
+      div.innerHTML=`
+        <div class="avatar">${c.name[0]}</div>
+        <div>${c.name}</div>
+      `;
+      div.onclick=()=>openChat(d.id,c.name);
+      contacts.appendChild(div);
+    });
+  });
 }
-</script>
 
+/* ADD CONTACT */
+window.addContact=()=>show("add");
+window.saveContact=async()=>{
+  const uid=contactId.value;
+  const q=await getDoc(doc(db,"users",uid));
+  if(!q.exists())return alert("User not found");
+  await setDoc(doc(db,"contacts",myUID,"list",uid),{
+    name:q.data().username,
+    userId:q.data().userId
+  });
+  show("hall");
+};
+
+/* CHAT */
+function chatId(a,b){return a<b?a+"_"+b:b+"_"+a}
+window.openChat=(uid,name)=>{
+  currentChat=chatId(myUID,uid);
+  chatName.textContent=name;
+  messages.innerHTML="";
+  show("chat");
+
+  onSnapshot(
+    query(collection(db,"chats",currentChat,"msgs"),orderBy("createdAt")),
+    s=>{
+      messages.innerHTML="";
+      s.forEach(d=>{
+        const m=d.data();
+        const div=document.createElement("div");
+        div.className="message "+(m.sender===myUID?"me":"other");
+        div.textContent=m.text;
+        messages.appendChild(div);
+      });
+      messages.scrollTop=messages.scrollHeight;
+    }
+  );
+};
+
+window.send=async()=>{
+  if(!msg.value)return;
+  await addDoc(collection(db,"chats",currentChat,"msgs"),{
+    sender:myUID,
+    text:msg.value,
+    createdAt:serverTimestamp()
+  });
+  msg.value="";
+};
+
+window.back=()=>show("hall");
+</script>
 </body>
-</html>
+  </html>
