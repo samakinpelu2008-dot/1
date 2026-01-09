@@ -33,13 +33,14 @@ body, html { height:100%; width:100%; background:#121b22; color:#e5ddd5; overflo
   overflow:hidden;
   display:none;
   flex-direction:column;
-  width:160px;
+  width:180px;
   z-index:10;
 }
 .menu-item {
   padding:12px 16px;
   cursor:pointer;
 }
+.menu-item.deactivated { color:#777; pointer-events:none; }
 .menu-item:hover { background:#1c262b; }
 
 /* ---------- CHAT LIST ---------- */
@@ -69,6 +70,25 @@ body, html { height:100%; width:100%; background:#121b22; color:#e5ddd5; overflo
   color:black;
 }
 .chat-name { font-size:16px; font-weight:bold; }
+
+/* ---------- SEARCH CARD ---------- */
+#searchCard {
+  position:absolute;
+  top:60px; left:0; right:0;
+  background:#1c262b;
+  padding:10px;
+  display:none;
+  z-index:5;
+}
+#searchCard input {
+  width:95%;
+  margin:0 auto;
+  display:block;
+  padding:10px;
+  border-radius:20px;
+  border:none;
+  outline:none;
+}
 </style>
 </head>
 
@@ -79,16 +99,22 @@ body, html { height:100%; width:100%; background:#121b22; color:#e5ddd5; overflo
   <div class="appbar">
     <div class="left">IEM Chat</div>
     <div class="right">
-      <div class="icon">🔍</div>
+      <div class="icon" onclick="toggleSearch()">🔍</div>
       <div class="icon" onclick="toggleMenu()">⋮</div>
     </div>
 
     <!-- DROPDOWN MENU -->
     <div id="menu" class="menu-dropdown">
+      <div class="menu-item deactivated">New Group</div>
       <div class="menu-item" onclick="alert('Add Contact')">Add Contact</div>
-      <div class="menu-item" onclick="alert('My User ID')">My User ID</div>
-      <div class="menu-item" onclick="alert('Settings')">Settings</div>
+      <div class="menu-item deactivated">Settings</div>
+      <div class="menu-item" onclick="alert('Your User ID: ABCD-12345')">User ID</div>
     </div>
+  </div>
+
+  <!-- SEARCH CARD -->
+  <div id="searchCard">
+    <input type="text" placeholder="Search contacts...">
   </div>
 
   <!-- CHAT LIST -->
@@ -115,12 +141,21 @@ function toggleMenu(){
   menu.style.display = menu.style.display==="flex"?"none":"flex";
 }
 
+function toggleSearch(){
+  const search = document.getElementById("searchCard");
+  search.style.display = search.style.display==="block"?"none":"block";
+}
+
 // Close menu when clicking outside
 document.addEventListener("click", e=>{
   const menu = document.getElementById("menu");
-  const icon = document.querySelector(".appbar .icon:nth-child(2)");
-  if(!menu.contains(e.target) && !icon.contains(e.target)){
+  const search = document.getElementById("searchCard");
+  const icons = document.querySelectorAll(".appbar .icon");
+  if(!menu.contains(e.target) && !icons[1].contains(e.target)){
     menu.style.display="none";
+  }
+  if(!search.contains(e.target) && !icons[0].contains(e.target)){
+    search.style.display="none";
   }
 });
 </script>
