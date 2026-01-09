@@ -2,39 +2,64 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Chat Firebase</title>
+<title>IEM Chat Full</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui;}
 body,html{height:100%;background:#0f1720;color:#e5e7eb;overflow:hidden;}
+.app{height:100%;display:flex;flex-direction:column;}
 
-.chat-container{
-  width:100%;
-  max-width:420px;
-  height:100vh;
-  display:flex;
-  flex-direction:column;
-}
-
-/* TOP BAR */
-.chat-topbar{
+/* Top bars */
+.topbar, .chat-topbar{
   height:60px;
-  background:#0f1720;
   display:flex;
   align-items:center;
   justify-content:space-between;
   padding:0 15px;
   border-bottom:1px solid #1f2c33;
+  background:#0f1720;
+  color:#e5e7eb;
 }
-.chat-user{display:flex;align-items:center;gap:10px;}
+.topbar h1, .chat-topbar .name{font-size:20px;font-weight:600;}
 .avatar{
   width:40px;height:40px;background:#1f2c33;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;font-weight:bold;
+  display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:16px;
 }
-.menu{font-size:20px;cursor:pointer;}
-.name{font-size:16px;}
+.menu, .back-btn{font-size:20px;cursor:pointer;}
+.topbar button{background:#1f2c33;color:#e5e7eb;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;}
 
-/* MESSAGES */
+/* Search */
+.search{
+  padding:10px;
+  background:#111b21;
+}
+.search input{
+  width:100%;
+  padding:10px 15px;
+  border-radius:25px;
+  border:none;
+  outline:none;
+  background:#2a3942;
+  color:white;
+}
+
+/* Chat list */
+.chat-list{
+  flex:1;
+  overflow-y:auto;
+}
+.chat{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 15px;
+  border-bottom:1px solid #1f2c33;
+  cursor:pointer;
+}
+.chat:hover{background:#1c262b;}
+.name{font-size:16px;font-weight:600;}
+
+/* Messages */
 .messages{
   flex:1;
   padding:15px;
@@ -54,7 +79,7 @@ body,html{height:100%;background:#0f1720;color:#e5e7eb;overflow:hidden;}
 .sent{background:#1f2c33;align-self:flex-end;border-bottom-right-radius:0;}
 .received{background:#111827;align-self:flex-start;border-bottom-left-radius:0;}
 
-/* INPUT */
+/* Input */
 .chat-input{
   display:flex;
   gap:10px;
@@ -83,32 +108,43 @@ body,html{height:100%;background:#0f1720;color:#e5e7eb;overflow:hidden;}
 </head>
 <body>
 
-<div class="chat-container">
+<div id="app" class="app">
 
-  <!-- TOP BAR -->
-  <div class="chat-topbar">
-    <div class="chat-user">
-      <div class="avatar" id="chatAvatar">S</div>
-      <div class="name" id="chatName">Contact</div>
+  <!-- CHAT HALL -->
+  <div id="chatHall">
+    <div class="topbar">
+      <h1>IEM Chat</h1>
+      <button onclick="logout()">Logout</button>
     </div>
-    <div class="menu">⋮</div>
+    <div class="search">
+      <input placeholder="Search contacts..." onkeyup="filterContacts(this.value)">
+    </div>
+    <div class="chat-list" id="contactsList"></div>
   </div>
 
-  <!-- MESSAGES -->
-  <div class="messages" id="messages"></div>
-
-  <!-- INPUT -->
-  <div class="chat-input">
-    <input type="text" id="messageInput" placeholder="Type a message">
-    <button id="sendBtn">➤</button>
+  <!-- CHAT SCREEN -->
+  <div id="chatScreen" style="display:none;flex-direction:column;height:100%;">
+    <div class="chat-topbar">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="back-btn" onclick="backToHall()">←</div>
+        <div class="avatar" id="chatAvatar">C</div>
+        <div class="name" id="chatName">Contact</div>
+      </div>
+      <div class="menu">⋮</div>
+    </div>
+    <div class="messages" id="messages"></div>
+    <div class="chat-input">
+      <input type="text" id="messageInput" placeholder="Type a message">
+      <button id="sendBtn">➤</button>
+    </div>
   </div>
 
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, collection, onSnapshot, addDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDCBD2gVIg9v-KqYaMFZeu_grgs3yKYfPs",
@@ -124,29 +160,86 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 let currentUserUid = null;
-let chatId = null; // will be computed based on two UIDs
-let messagesDiv = document.getElementById("messages");
-const input = document.getElementById("messageInput");
+let currentContact = null;
+let chatId = null;
+
+// DOM references
+const chatHall = document.getElementById("chatHall");
+const chatScreen = document.getElementById("chatScreen");
+const contactsList = document.getElementById("contactsList");
+const chatName = document.getElementById("chatName");
+const chatAvatar = document.getElementById("chatAvatar");
+const messagesDiv = document.getElementById("messages");
+const messageInput = document.getElementById("messageInput");
 const sendBtn = document.getElementById("sendBtn");
 
+let allContacts = [];
+let unsubscribeMessages = null;
+
+// AUTH
 onAuthStateChanged(auth, user=>{
   if(!user) return;
   currentUserUid = user.uid;
-
-  // For testing: we’ll chat with another fixed UID (replace with real contact)
-  const otherUid = "TESTCONTACTUID"; 
-  chatId = [currentUserUid, otherUid].sort().join("_");
-
-  listenMessages();
+  loadContacts();
 });
 
-function listenMessages(){
-  const messagesRef = collection(db, "chats", chatId, "messages");
-  const q = query(messagesRef, orderBy("timestamp","asc"));
+// LOGOUT
+window.logout = async()=>{ await signOut(auth); location.reload(); }
 
-  onSnapshot(q, snapshot=>{
+// LOAD CONTACTS
+function loadContacts(){
+  const ref = collection(db,"contacts",currentUserUid,"list");
+  onSnapshot(ref,snap=>{
+    allContacts = snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderContacts(allContacts);
+  });
+}
+
+function renderContacts(list){
+  contactsList.innerHTML="";
+  list.forEach(c=>{
+    const div=document.createElement("div");
+    div.className="chat";
+    div.innerHTML=`<div class="avatar">${(c.name||c.userId)[0].toUpperCase()}</div><div class="name">${c.name||c.userId}</div>`;
+    div.onclick = ()=>openChat(c);
+    contactsList.appendChild(div);
+  });
+}
+
+// SEARCH
+window.filterContacts = txt=>{
+  renderContacts(allContacts.filter(c=>
+    (c.name||c.userId).toLowerCase().includes(txt.toLowerCase())
+  ));
+}
+
+// OPEN CHAT
+function openChat(contact){
+  currentContact = contact;
+  chatId = [currentUserUid, contact.id].sort().join("_");
+  chatName.textContent = contact.name || contact.userId;
+  chatAvatar.textContent = (contact.name||contact.userId)[0].toUpperCase();
+  chatHall.style.display="none";
+  chatScreen.style.display="flex";
+  listenMessages();
+}
+
+// BACK TO HALL
+window.backToHall = ()=>{
+  chatScreen.style.display="none";
+  chatHall.style.display="flex";
+  if(unsubscribeMessages) unsubscribeMessages();
+}
+
+// MESSAGES
+function listenMessages(){
+  messagesDiv.innerHTML="";
+  const messagesRef = collection(db,"chats",chatId,"messages");
+  const q = query(messagesRef, orderBy("timestamp","asc"));
+  if(unsubscribeMessages) unsubscribeMessages();
+  unsubscribeMessages = onSnapshot(q, snap=>{
     messagesDiv.innerHTML="";
-    snapshot.forEach(doc=>{
+    snap.forEach(doc=>{
       const m = doc.data();
       const div = document.createElement("div");
       div.className = "message "+(m.senderUid===currentUserUid?"sent":"received");
@@ -157,22 +250,21 @@ function listenMessages(){
   });
 }
 
+// SEND MESSAGE
 sendBtn.onclick = sendMessage;
-input.addEventListener("keydown", e=>{
+messageInput.addEventListener("keydown", e=>{
   if(e.key==="Enter") sendMessage();
 });
-
 async function sendMessage(){
-  const text = input.value.trim();
+  const text = messageInput.value.trim();
   if(!text) return;
-
   const messagesRef = collection(db,"chats",chatId,"messages");
   await addDoc(messagesRef,{
     text,
     senderUid: currentUserUid,
     timestamp: Date.now()
   });
-  input.value="";
+  messageInput.value="";
 }
 </script>
 </body>
