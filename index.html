@@ -2,88 +2,106 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Firebase Chat</title>
+<title>WhatsApp Style Chat</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
 <style>
 * {
   box-sizing: border-box;
 }
 
-body {
+html, body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: #0b141a;
-  color: white;
-  height: 100vh;
 }
 
-#home, #chat {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
+/* ---------- HOME ---------- */
 #home {
+  height: 100%;
+  display: flex;
   justify-content: center;
   align-items: center;
-  padding: 20px;
 }
 
-.home-box {
-  width: 100%;
-  max-width: 400px;
+.home-card {
+  width: 90%;
+  max-width: 500px;
   background: #111b21;
-  padding: 20px;
-  border-radius: 10px;
+  padding: 30px;
+  border-radius: 12px;
 }
 
-button {
+.home-card h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.home-card input,
+.home-card button {
   width: 100%;
-  padding: 12px;
-  margin-top: 10px;
-  background: #25d366;
-  border: none;
-  color: black;
-  border-radius: 6px;
+  padding: 14px;
+  margin-top: 12px;
   font-size: 16px;
+  border-radius: 8px;
+  border: none;
+}
+
+.home-card input {
+  background: #202c33;
+  color: white;
+}
+
+.home-card button {
+  background: #25d366;
+  font-weight: bold;
   cursor: pointer;
 }
 
-input {
-  width: 100%;
-  padding: 10px;
-  margin-top: 10px;
-  border-radius: 6px;
-  border: none;
-  font-size: 14px;
-}
-
+/* ---------- CHAT ---------- */
 #chat {
   display: none;
+  height: 100%;
+  width: 100%;
+  flex-direction: column;
 }
 
+/* Header */
 .header {
-  padding: 15px;
+  height: 60px;
   background: #202c33;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #e9edef;
   font-size: 14px;
-  color: #aebac1;
+  flex-shrink: 0;
 }
 
+/* Messages */
 #messages {
   flex: 1;
   padding: 15px;
   overflow-y: auto;
+  background: #0b141a;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
+/* Message bubbles */
 .message {
-  max-width: 70%;
-  padding: 10px 12px;
-  border-radius: 10px;
+  max-width: 75%;
+  padding: 10px 14px;
   font-size: 14px;
+  border-radius: 8px;
   line-height: 1.4;
+  word-wrap: break-word;
 }
 
 .me {
@@ -98,35 +116,59 @@ input {
   border-bottom-left-radius: 2px;
 }
 
-.input-box {
-  display: flex;
-  padding: 10px;
+/* Input area */
+.input-bar {
+  height: 60px;
   background: #202c33;
+  display: flex;
+  align-items: center;
+  padding: 8px;
   gap: 8px;
+  flex-shrink: 0;
 }
 
-.input-box input {
+.input-bar input {
   flex: 1;
+  height: 42px;
+  border-radius: 21px;
+  border: none;
+  padding: 0 15px;
+  font-size: 15px;
+  background: #2a3942;
+  color: white;
+}
+
+.input-bar button {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: none;
+  background: #25d366;
+  font-size: 18px;
+  cursor: pointer;
 }
 </style>
 </head>
+
 <body>
 
+<!-- HOME -->
 <div id="home">
-  <div class="home-box">
-    <h2 style="text-align:center;">Chat Room</h2>
+  <div class="home-card">
+    <h2>Private Chat</h2>
     <button onclick="createRoom()">Create Chat</button>
     <input id="roomInput" placeholder="Enter room code">
     <button onclick="joinRoom()">Join Chat</button>
   </div>
 </div>
 
+<!-- CHAT -->
 <div id="chat">
   <div class="header" id="roomCode"></div>
   <div id="messages"></div>
-  <div class="input-box">
+  <div class="input-bar">
     <input id="messageInput" placeholder="Type a message">
-    <button onclick="sendMessage()">Send</button>
+    <button onclick="sendMessage()">➤</button>
   </div>
 </div>
 
@@ -134,7 +176,7 @@ input {
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
   getFirestore, collection, addDoc, query,
-  orderBy, onSnapshot, serverTimestamp
+  orderBy, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -150,10 +192,10 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let roomId = "";
-const userId = Math.random().toString(36).substring(2, 8);
+const userId = Math.random().toString(36).slice(2);
 
 window.createRoom = () => {
-  roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
+  roomId = Math.random().toString(36).slice(2, 8).toUpperCase();
   startChat();
 };
 
@@ -167,7 +209,7 @@ window.joinRoom = () => {
 function startChat() {
   document.getElementById("home").style.display = "none";
   document.getElementById("chat").style.display = "flex";
-  document.getElementById("roomCode").innerText = "Room Code: " + roomId;
+  document.getElementById("roomCode").innerText = "Room: " + roomId;
 
   const q = query(
     collection(db, "rooms", roomId, "messages"),
@@ -175,16 +217,16 @@ function startChat() {
   );
 
   onSnapshot(q, snap => {
-    const messages = document.getElementById("messages");
-    messages.innerHTML = "";
+    const box = document.getElementById("messages");
+    box.innerHTML = "";
     snap.forEach(doc => {
       const d = doc.data();
       const div = document.createElement("div");
       div.className = "message " + (d.user === userId ? "me" : "them");
       div.textContent = d.text;
-      messages.appendChild(div);
-      messages.scrollTop = messages.scrollHeight;
+      box.appendChild(div);
     });
+    box.scrollTop = box.scrollHeight;
   });
 }
 
@@ -195,7 +237,7 @@ window.sendMessage = async () => {
   await addDoc(collection(db, "rooms", roomId, "messages"), {
     text: input.value,
     user: userId,
-    time: serverTimestamp()
+    time: Date.now()
   });
 
   input.value = "";
