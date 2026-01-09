@@ -112,7 +112,7 @@ body, html { height:100%; width:100%; background:#121b22; color:#e5ddd5; overflo
       <div class="menu-item deactivated">New Group</div>
       <div class="menu-item" onclick="addContact()">Add Contact</div>
       <div class="menu-item deactivated">Settings</div>
-      <div class="menu-item" onclick="alert('Your User ID: '+myUserId)">User ID</div>
+      <div class="menu-item" id="userIdMenu">User ID</div>
     </div>
   </div>
 
@@ -130,9 +130,10 @@ body, html { height:100%; width:100%; background:#121b22; color:#e5ddd5; overflo
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, collection, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyDCBD2gVIg9v-KqYaMFZeu_grgs3yKYfPs",
   authDomain: "fir-chat-f8d55.firebaseapp.com",
@@ -142,34 +143,43 @@ const firebaseConfig = {
   appId: "1:792896094694:web:dd373e5d7d2fc9ae1d5627"
 };
 
+// Init
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let myUID,myUserId;
-let contactsList = []; // will store Firebase contacts
+let myUID, myUserId;
+let contactsList = [];
 
-// ---------- AUTH ----------
+// ---------- LOGIN (ANONYMOUS FOR TESTING) ----------
+signInAnonymously(auth).catch(err=>console.error(err));
+
 onAuthStateChanged(auth, async user=>{
-  if(!user) return alert("You must be logged in first");
+  if(!user) return;
   myUID = user.uid;
 
-  // get user's UserID
-  const userDoc = await db.collection("users").doc(myUID).get();
-  myUserId = userDoc.data().userId;
+  // Get UserID (if exists in users collection)
+  const userRef = doc(db,"users",myUID);
+  const userSnap = await getDoc(userRef);
+  if(userSnap.exists()){
+    myUserId = userSnap.data().userId;
+  } else {
+    myUserId = "USER-XXXXX"; // fallback
+  }
+  document.getElementById("userIdMenu").innerText = "User ID: "+myUserId;
 
-  // load contacts
+  // Load contacts from Firestore
   loadContacts();
 });
 
 // ---------- LOAD CONTACTS ----------
 function loadContacts(){
-  const colRef = collection(db,"contacts",myUID,"list");
-  onSnapshot(colRef, snap=>{
-    contactsList = [];
-    snap.forEach(doc=>{
-      contactsList.push({ name: doc.data().name, id: doc.data().userId });
-    });
+  const contactsRef = collection(db,"contacts",myUID,"list");
+  onSnapshot(contactsRef, snap=>{
+    contactsList = snap.docs.map(doc=>({
+      name: doc.data().name,
+      id: doc.data().userId
+    }));
     renderContacts(contactsList);
   });
 }
@@ -196,11 +206,11 @@ function filterContacts(text){
   renderContacts(filtered);
 }
 
+// ---------- MENU ----------
 function toggleMenu(){
   const menu = document.getElementById("menu");
   menu.style.display = menu.style.display==="flex"?"none":"flex";
 }
-
 function toggleSearch(){
   const search = document.getElementById("searchCard");
   search.style.display = search.style.display==="flex"?"none":"flex";
@@ -212,17 +222,13 @@ function addContact(){
   alert("Add Contact clicked (we'll implement the modal next)");
 }
 
-// ---------- CLICK OUTSIDE TO CLOSE ----------
+// Close menu/search when clicking outside
 document.addEventListener("click", e=>{
   const menu = document.getElementById("menu");
   const search = document.getElementById("searchCard");
   const icons = document.querySelectorAll(".appbar .icon");
-  if(!menu.contains(e.target) && !icons[1].contains(e.target)){
-    menu.style.display="none";
-  }
-  if(!search.contains(e.target) && !icons[0].contains(e.target)){
-    search.style.display="none";
-  }
+  if(!menu.contains(e.target) && !icons[1].contains(e.target)) menu.style.display="none";
+  if(!search.contains(e.target) && !icons[0].contains(e.target)) search.style.display="none";
 });
 </script>
 </body>
