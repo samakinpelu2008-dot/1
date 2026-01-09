@@ -2,138 +2,54 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>WhatsApp-style Chat Hall</title>
+<title>IEM Chat – Debug Mode</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-* { box-sizing:border-box; margin:0; padding:0; font-family: system-ui, sans-serif; }
-body, html { height:100%; width:100%; background:#121b22; color:#e5ddd5; overflow:hidden; }
-
-/* ---------- TOP APP BAR ---------- */
-.appbar {
-  height:60px;
-  background:#075E54;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 12px;
-  position:relative;
-  flex-shrink:0;
+body {
+  background:#0f1720;
+  color:#e5e7eb;
+  font-family: monospace;
+  padding:20px;
 }
-.appbar .left { font-size:20px; font-weight:bold; }
-.appbar .right { display:flex; align-items:center; gap:16px; }
-.icon { cursor:pointer; font-size:22px; }
-
-/* ---------- DROPDOWN MENU ---------- */
-.menu-dropdown {
-  position:absolute;
-  top:60px;
-  right:12px;
-  background:#262f34;
-  border-radius:8px;
-  overflow:hidden;
-  display:none;
-  flex-direction:column;
-  width:180px;
-  z-index:10;
+.status {
+  margin:10px 0;
+  padding:10px;
+  border-radius:6px;
 }
-.menu-item {
-  padding:12px 16px;
-  cursor:pointer;
-}
-.menu-item.deactivated { color:#777; pointer-events:none; }
-.menu-item:hover { background:#1c262b; }
-
-/* ---------- SEARCH CARD ---------- */
-#searchCard {
-  position:absolute;
-  top:60px; left:0; right:0;
-  background:#121b22;
-  display:none;
-  flex-direction:column;
-  z-index:5;
-  border-bottom:1px solid #1e2a2f;
-}
-#searchCard input {
-  width:95%;
-  margin:10px auto;
-  display:block;
+.ok { background:#064e3b; }
+.warn { background:#78350f; }
+.err { background:#7f1d1d; }
+button {
   padding:10px 15px;
-  border-radius:25px;
-  border:none;
-  outline:none;
-  background:#2a3942;
-  color:white;
-  font-size:16px;
-}
-
-/* ---------- CHAT LIST ---------- */
-.chat-list {
-  flex:1;
-  overflow-y:auto;
-  background:#121b22;
-}
-.chat-item {
-  display:flex;
-  align-items:center;
-  padding:12px 16px;
-  gap:12px;
+  margin-top:15px;
   cursor:pointer;
-  border-bottom:1px solid #1e2a2f;
 }
-.chat-item:hover { background:#1c262b; }
-.avatar {
-  width:50px; height:50px;
-  border-radius:50%;
-  background:#25d366;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  font-size:22px;
-  font-weight:bold;
-  color:black;
-}
-.chat-name { font-size:16px; font-weight:bold; }
 </style>
 </head>
-
 <body>
-<div id="chatHall" style="display:flex;flex-direction:column;height:100%;">
 
-  <!-- TOP BAR -->
-  <div class="appbar">
-    <div class="left">IEM Chat</div>
-    <div class="right">
-      <div class="icon" onclick="toggleSearch()">🔍</div>
-      <div class="icon" onclick="toggleMenu()">⋮</div>
-    </div>
+<h2>IEM CHAT – DEBUG MODE</h2>
 
-    <!-- DROPDOWN MENU -->
-    <div id="menu" class="menu-dropdown">
-      <div class="menu-item deactivated">New Group</div>
-      <div class="menu-item" onclick="addContact()">Add Contact</div>
-      <div class="menu-item deactivated">Settings</div>
-      <div class="menu-item" id="userIdMenu">User ID</div>
-    </div>
-  </div>
+<div id="log"></div>
 
-  <!-- SEARCH CARD -->
-  <div id="searchCard">
-    <input type="text" placeholder="Search contacts..." onkeyup="filterContacts(this.value)">
-  </div>
+<button onclick="testRender()">TEST RENDER CONTACT</button>
 
-  <!-- CHAT LIST -->
-  <div id="chatList" class="chat-list">
-    <!-- Contacts from Firebase will appear here -->
-  </div>
-
-</div>
+<div id="contacts"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// Firebase config
+const log = (msg, cls="ok")=>{
+  const d = document.createElement("div");
+  d.className = "status "+cls;
+  d.innerText = msg;
+  document.getElementById("log").appendChild(d);
+};
+
+log("JS running ✅");
+
 const firebaseConfig = {
   apiKey: "AIzaSyDCBD2gVIg9v-KqYaMFZeu_grgs3yKYfPs",
   authDomain: "fir-chat-f8d55.firebaseapp.com",
@@ -143,93 +59,51 @@ const firebaseConfig = {
   appId: "1:792896094694:web:dd373e5d7d2fc9ae1d5627"
 };
 
-// Init
 const app = initializeApp(firebaseConfig);
+log("Firebase initialized ✅");
+
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let myUID, myUserId;
-let contactsList = [];
-
-// ---------- LOGIN (ANONYMOUS FOR TESTING) ----------
-signInAnonymously(auth).catch(err=>console.error(err));
-
-onAuthStateChanged(auth, async user=>{
-  if(!user) return;
-  myUID = user.uid;
-
-  // Get UserID (if exists in users collection)
-  const userRef = doc(db,"users",myUID);
-  const userSnap = await getDoc(userRef);
-  if(userSnap.exists()){
-    myUserId = userSnap.data().userId;
-  } else {
-    myUserId = "USER-XXXXX"; // fallback
+onAuthStateChanged(auth, user=>{
+  if(!user){
+    log("No authenticated user ❌", "err");
+    return;
   }
-  document.getElementById("userIdMenu").innerText = "User ID: "+myUserId;
 
-  // Load contacts from Firestore
-  loadContacts();
-});
+  log("User authenticated ✅ UID: "+user.uid);
 
-// ---------- LOAD CONTACTS ----------
-function loadContacts(){
-  const contactsRef = collection(db,"contacts",myUID,"list");
+  const contactsRef = collection(db, "contacts", user.uid, "list");
+
   onSnapshot(contactsRef, snap=>{
-    contactsList = snap.docs.map(doc=>({
-      name: doc.data().name,
-      id: doc.data().userId
-    }));
-    renderContacts(contactsList);
+    log("Firestore connected ✅", "ok");
+    log("Contacts found: "+snap.size, snap.size ? "ok" : "warn");
+
+    const cDiv = document.getElementById("contacts");
+    cDiv.innerHTML = "<h3>Contacts:</h3>";
+
+    snap.forEach(doc=>{
+      const p = document.createElement("p");
+      p.innerText = JSON.stringify(doc.data());
+      cDiv.appendChild(p);
+    });
+
+    if(snap.size === 0){
+      log("No contacts in Firestore path", "warn");
+    }
+  }, err=>{
+    log("Firestore error: "+err.message, "err");
   });
-}
-
-// ---------- RENDER ----------
-function renderContacts(list){
-  const chatList = document.getElementById("chatList");
-  chatList.innerHTML="";
-  list.forEach(c=>{
-    const div = document.createElement("div");
-    div.className="chat-item";
-    div.innerHTML = `<div class="avatar">${c.name[0]}</div>
-                     <div class="chat-name">${c.name}-${c.id}</div>`;
-    chatList.appendChild(div);
-  });
-}
-
-// ---------- SEARCH ----------
-function filterContacts(text){
-  const filtered = contactsList.filter(c=>
-    c.name.toLowerCase().includes(text.toLowerCase()) ||
-    c.id.toLowerCase().includes(text.toLowerCase())
-  );
-  renderContacts(filtered);
-}
-
-// ---------- MENU ----------
-function toggleMenu(){
-  const menu = document.getElementById("menu");
-  menu.style.display = menu.style.display==="flex"?"none":"flex";
-}
-function toggleSearch(){
-  const search = document.getElementById("searchCard");
-  search.style.display = search.style.display==="flex"?"none":"flex";
-  search.querySelector("input").focus();
-}
-
-// ---------- ADD CONTACT PLACEHOLDER ----------
-function addContact(){
-  alert("Add Contact clicked (we'll implement the modal next)");
-}
-
-// Close menu/search when clicking outside
-document.addEventListener("click", e=>{
-  const menu = document.getElementById("menu");
-  const search = document.getElementById("searchCard");
-  const icons = document.querySelectorAll(".appbar .icon");
-  if(!menu.contains(e.target) && !icons[1].contains(e.target)) menu.style.display="none";
-  if(!search.contains(e.target) && !icons[0].contains(e.target)) search.style.display="none";
 });
+
+window.testRender = ()=>{
+  const cDiv = document.getElementById("contacts");
+  const p = document.createElement("p");
+  p.innerText = "TEST CONTACT RENDERED LOCALLY";
+  cDiv.appendChild(p);
+  log("Local render works ✅");
+};
 </script>
+
 </body>
 </html>
