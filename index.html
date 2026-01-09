@@ -2,169 +2,80 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>WhatsApp Style Chat</title>
-
+<title>WhatsApp Style Auth Chat</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-
 <style>
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
+html, body { margin:0; padding:0; width:100%; height:100%; font-family: system-ui, sans-serif; background: #0b141a; overflow:hidden; }
 
-html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: #0b141a;
-}
+/* COMMON */
+input, button { font-size:16px; border:none; outline:none; }
+button { cursor:pointer; }
 
-/* ---------- HOME ---------- */
-#home {
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
+/* ----- LOGIN PAGE ----- */
+#login-page { display:flex; justify-content:center; align-items:center; height:100%; }
+.login-card { width:90%; max-width:400px; background:#111b21; padding:30px; border-radius:12px; display:flex; flex-direction:column; gap:15px; }
+.login-card input { padding:12px; border-radius:8px; background:#202c33; color:white; }
+.login-card button { padding:12px; border-radius:8px; background:#25d366; font-weight:bold; }
 
-.home-card {
-  width: 90%;
-  max-width: 500px;
-  background: #111b21;
-  padding: 30px;
-  border-radius: 12px;
-}
+/* ----- OTP PAGE ----- */
+#otp-page { display:none; justify-content:center; align-items:center; height:100%; }
+.otp-card { width:90%; max-width:400px; background:#111b21; padding:30px; border-radius:12px; display:flex; flex-direction:column; gap:15px; }
+.otp-card input { padding:12px; border-radius:8px; background:#202c33; color:white; }
+.otp-card button { padding:12px; border-radius:8px; background:#25d366; font-weight:bold; }
 
-.home-card h2 {
-  text-align: center;
-  margin-bottom: 20px;
-}
+/* ----- USERNAME PAGE ----- */
+#username-page { display:none; justify-content:center; align-items:center; height:100%; }
+.username-card { width:90%; max-width:400px; background:#111b21; padding:30px; border-radius:12px; display:flex; flex-direction:column; gap:15px; }
+.username-card input { padding:12px; border-radius:8px; background:#202c33; color:white; }
+.username-card button { padding:12px; border-radius:8px; background:#25d366; font-weight:bold; }
 
-.home-card input,
-.home-card button {
-  width: 100%;
-  padding: 14px;
-  margin-top: 12px;
-  font-size: 16px;
-  border-radius: 8px;
-  border: none;
-}
-
-.home-card input {
-  background: #202c33;
-  color: white;
-}
-
-.home-card button {
-  background: #25d366;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-/* ---------- CHAT ---------- */
-#chat {
-  display: none;
-  height: 100%;
-  width: 100%;
-  flex-direction: column;
-}
-
-/* Header */
-.header {
-  height: 60px;
-  background: #202c33;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #e9edef;
-  font-size: 14px;
-  flex-shrink: 0;
-}
-
-/* Messages */
-#messages {
-  flex: 1;
-  padding: 15px;
-  overflow-y: auto;
-  background: #0b141a;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-/* Message bubbles */
-.message {
-  max-width: 75%;
-  padding: 10px 14px;
-  font-size: 14px;
-  border-radius: 8px;
-  line-height: 1.4;
-  word-wrap: break-word;
-}
-
-.me {
-  align-self: flex-end;
-  background: #005c4b;
-  border-bottom-right-radius: 2px;
-}
-
-.them {
-  align-self: flex-start;
-  background: #202c33;
-  border-bottom-left-radius: 2px;
-}
-
-/* Input area */
-.input-bar {
-  height: 60px;
-  background: #202c33;
-  display: flex;
-  align-items: center;
-  padding: 8px;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.input-bar input {
-  flex: 1;
-  height: 42px;
-  border-radius: 21px;
-  border: none;
-  padding: 0 15px;
-  font-size: 15px;
-  background: #2a3942;
-  color: white;
-}
-
-.input-bar button {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  border: none;
-  background: #25d366;
-  font-size: 18px;
-  cursor: pointer;
-}
+/* ----- CHAT PAGE ----- */
+#chat-page { display:none; height:100%; width:100%; flex-direction:column; }
+.header { height:60px; background:#202c33; display:flex; align-items:center; justify-content:center; color:#e9edef; font-size:16px; flex-shrink:0; }
+#messages { flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:6px; padding:15px; background:#0b141a; }
+.message { max-width:75%; padding:10px 14px; font-size:14px; border-radius:8px; line-height:1.4; word-wrap:break-word; display:flex; align-items:center; gap:8px; }
+.me { align-self:flex-end; background:#005c4b; border-bottom-right-radius:2px; }
+.them { align-self:flex-start; background:#202c33; border-bottom-left-radius:2px; }
+.avatar { width:28px; height:28px; border-radius:50%; background:#25d366; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:14px; flex-shrink:0; }
+.input-bar { height:60px; background:#202c33; display:flex; align-items:center; padding:8px; gap:8px; flex-shrink:0; }
+.input-bar input { flex:1; height:42px; border-radius:21px; background:#2a3942; color:white; padding:0 15px; font-size:15px; }
+.input-bar button { width:42px; height:42px; border-radius:50%; background:#25d366; font-size:18px; cursor:pointer; border:none; }
 </style>
 </head>
-
 <body>
 
-<!-- HOME -->
-<div id="home">
-  <div class="home-card">
-    <h2>Private Chat</h2>
-    <button onclick="createRoom()">Create Chat</button>
-    <input id="roomInput" placeholder="Enter room code">
-    <button onclick="joinRoom()">Join Chat</button>
+<!-- LOGIN -->
+<div id="login-page">
+  <div class="login-card">
+    <h2>Login</h2>
+    <input type="text" id="phone" placeholder="+2341234567890">
+    <div id="recaptcha-container"></div>
+    <button onclick="sendOTP()">Send OTP</button>
+  </div>
+</div>
+
+<!-- OTP -->
+<div id="otp-page">
+  <div class="otp-card">
+    <h2>Enter OTP</h2>
+    <input type="text" id="otp" placeholder="6-digit code">
+    <button onclick="verifyOTP()">Verify OTP</button>
+  </div>
+</div>
+
+<!-- USERNAME -->
+<div id="username-page">
+  <div class="username-card">
+    <h2>Set Username</h2>
+    <input type="text" id="username" placeholder="Enter username">
+    <button onclick="setUsername()">Continue</button>
   </div>
 </div>
 
 <!-- CHAT -->
-<div id="chat">
-  <div class="header" id="roomCode"></div>
+<div id="chat-page">
+  <div class="header" id="header-user"></div>
   <div id="messages"></div>
   <div class="input-bar">
     <input id="messageInput" placeholder="Type a message">
@@ -174,11 +85,10 @@ html, body {
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-  getFirestore, collection, addDoc, query,
-  orderBy, onSnapshot
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, setDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+// CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyDeFlOeRoiNjqH9LAclnqnehXNY6scPqzE",
   authDomain: "businessio-37c69.firebaseapp.com",
@@ -190,59 +100,87 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
-let roomId = "";
-const userId = Math.random().toString(36).slice(2);
+let confirmationResult;
+let currentUser = null;
 
-window.createRoom = () => {
-  roomId = Math.random().toString(36).slice(2, 8).toUpperCase();
-  startChat();
+// ===== LOGIN =====
+window.sendOTP = () => {
+  const phone = document.getElementById("phone").value;
+  if (!phone) return alert("Enter phone number");
+  window.recaptchaVerifier = new RecaptchaVerifier('recaptcha-container', {size: 'invisible'}, auth);
+  signInWithPhoneNumber(auth, phone, window.recaptchaVerifier)
+    .then(result => {
+      confirmationResult = result;
+      document.getElementById("login-page").style.display = "none";
+      document.getElementById("otp-page").style.display = "flex";
+    })
+    .catch(err => alert(err));
 };
 
-window.joinRoom = () => {
-  const code = document.getElementById("roomInput").value.trim();
-  if (!code) return alert("Enter room code");
-  roomId = code.toUpperCase();
-  startChat();
+// ===== VERIFY OTP =====
+window.verifyOTP = () => {
+  const code = document.getElementById("otp").value;
+  if (!code) return alert("Enter OTP");
+  confirmationResult.confirm(code)
+    .then(async result => {
+      currentUser = result.user;
+      const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+      if (userDoc.exists()) {
+        // Existing user → go to chat
+        startChat(userDoc.data().username);
+      } else {
+        // New user → set username
+        document.getElementById("otp-page").style.display = "none";
+        document.getElementById("username-page").style.display = "flex";
+      }
+    })
+    .catch(err => alert(err));
 };
 
-function startChat() {
-  document.getElementById("home").style.display = "none";
-  document.getElementById("chat").style.display = "flex";
-  document.getElementById("roomCode").innerText = "Room: " + roomId;
+// ===== SET USERNAME =====
+window.setUsername = async () => {
+  const username = document.getElementById("username").value.trim();
+  if (!username) return alert("Enter username");
+  await setDoc(doc(db, "users", currentUser.uid), { username });
+  startChat(username);
+};
 
-  const q = query(
-    collection(db, "rooms", roomId, "messages"),
-    orderBy("time")
-  );
-
+// ===== CHAT =====
+function startChat(username) {
+  document.getElementById("username-page").style.display = "none";
+  document.getElementById("chat-page").style.display = "flex";
+  document.getElementById("header-user").innerText = username;
+  
+  const messagesRef = collection(db, "chats");
+  const q = query(messagesRef, orderBy("time"));
+  
   onSnapshot(q, snap => {
-    const box = document.getElementById("messages");
-    box.innerHTML = "";
-    snap.forEach(doc => {
-      const d = doc.data();
+    const messagesBox = document.getElementById("messages");
+    messagesBox.innerHTML = "";
+    snap.forEach(docSnap => {
+      const msg = docSnap.data();
       const div = document.createElement("div");
-      div.className = "message " + (d.user === userId ? "me" : "them");
-      div.textContent = d.text;
-      box.appendChild(div);
+      div.className = "message " + (msg.uid === currentUser.uid ? "me" : "them");
+      div.innerHTML = `<div class="avatar">${msg.username[0].toUpperCase()}</div>${msg.text}`;
+      messagesBox.appendChild(div);
     });
-    box.scrollTop = box.scrollHeight;
+    messagesBox.scrollTop = messagesBox.scrollHeight;
   });
 }
 
 window.sendMessage = async () => {
   const input = document.getElementById("messageInput");
   if (!input.value) return;
-
-  await addDoc(collection(db, "rooms", roomId, "messages"), {
+  await addDoc(collection(db, "chats"), {
     text: input.value,
-    user: userId,
+    uid: currentUser.uid,
+    username: (await getDoc(doc(db,"users",currentUser.uid))).data().username,
     time: Date.now()
   });
-
   input.value = "";
 };
 </script>
-
 </body>
 </html>
