@@ -47,20 +47,22 @@ body, html { height:100%; width:100%; background:#121b22; color:#e5ddd5; overflo
 #searchCard {
   position:absolute;
   top:60px; left:0; right:0;
-  background:#f5f5f5; /* WhatsApp-white style */
-  padding:10px 0;
+  background:#121b22;
   display:none;
   flex-direction:column;
   z-index:5;
+  border-bottom:1px solid #1e2a2f;
 }
 #searchCard input {
-  width:90%;
-  margin:0 auto;
+  width:95%;
+  margin:10px auto;
   display:block;
   padding:10px 15px;
   border-radius:25px;
   border:none;
   outline:none;
+  background:#2a3942;
+  color:white;
   font-size:16px;
 }
 
@@ -116,37 +118,58 @@ body, html { height:100%; width:100%; background:#121b22; color:#e5ddd5; overflo
 
   <!-- SEARCH CARD -->
   <div id="searchCard">
-    <input type="text" placeholder="Search contacts...">
+    <input type="text" placeholder="Search contacts..." onkeyup="filterContacts(this.value)">
   </div>
 
   <!-- CHAT LIST -->
   <div id="chatList" class="chat-list">
-    <div class="chat-item">
-      <div class="avatar">S</div>
-      <div class="chat-name">SAMU-12345</div>
-    </div>
-    <div class="chat-item">
-      <div class="avatar">A</div>
-      <div class="chat-name">ALAN-54321</div>
-    </div>
-    <div class="chat-item">
-      <div class="avatar">M</div>
-      <div class="chat-name">MARIA-98765</div>
-    </div>
+    <!-- Contacts will be dynamically shown here -->
   </div>
 
 </div>
 
 <script>
+// Sample contacts array (replace with Firebase contacts later)
+let contacts = [
+  { name:"SAMUEL", id:"SAMU-12345" },
+  { name:"ALAN", id:"ALAN-54321" },
+  { name:"MARIA", id:"MARIA-98765" },
+  { name:"JOHN", id:"JOHN-11111" }
+];
+
+// Render contacts
+function renderContacts(list){
+  const chatList = document.getElementById("chatList");
+  chatList.innerHTML="";
+  list.forEach(c=>{
+    const div = document.createElement("div");
+    div.className="chat-item";
+    div.innerHTML = `<div class="avatar">${c.name[0]}</div>
+                     <div class="chat-name">${c.name}-${c.id}</div>`;
+    chatList.appendChild(div);
+  });
+}
+renderContacts(contacts);
+
+// ---------- SEARCH FILTER ----------
+function filterContacts(text){
+  const filtered = contacts.filter(c=>
+    c.name.toLowerCase().includes(text.toLowerCase()) || 
+    c.id.toLowerCase().includes(text.toLowerCase())
+  );
+  renderContacts(filtered);
+}
+
+// ---------- MENU ----------
 function toggleMenu(){
   const menu = document.getElementById("menu");
   menu.style.display = menu.style.display==="flex"?"none":"flex";
 }
 
+// ---------- SEARCH ----------
 function toggleSearch(){
   const search = document.getElementById("searchCard");
-  search.style.display = search.style.display==="flex"?"flex":"flex";
-  search.style.display="flex";
+  search.style.display = search.style.display==="flex"?"none":"flex";
   search.querySelector("input").focus();
 }
 
@@ -163,6 +186,5 @@ document.addEventListener("click", e=>{
   }
 });
 </script>
-
 </body>
 </html>
