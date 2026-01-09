@@ -110,9 +110,9 @@ body, html { height:100%; width:100%; background:#121b22; color:#e5ddd5; overflo
     <!-- DROPDOWN MENU -->
     <div id="menu" class="menu-dropdown">
       <div class="menu-item deactivated">New Group</div>
-      <div class="menu-item" onclick="alert('Add Contact')">Add Contact</div>
+      <div class="menu-item" onclick="addContact()">Add Contact</div>
       <div class="menu-item deactivated">Settings</div>
-      <div class="menu-item" onclick="alert('Your User ID: ABCD-12345')">User ID</div>
+      <div class="menu-item" onclick="alert('Your User ID: '+myUserId)">User ID</div>
     </div>
   </div>
 
@@ -123,21 +123,58 @@ body, html { height:100%; width:100%; background:#121b22; color:#e5ddd5; overflo
 
   <!-- CHAT LIST -->
   <div id="chatList" class="chat-list">
-    <!-- Contacts will be dynamically shown here -->
+    <!-- Contacts from Firebase will appear here -->
   </div>
 
 </div>
 
-<script>
-// Sample contacts array (replace with Firebase contacts later)
-let contacts = [
-  { name:"SAMUEL", id:"SAMU-12345" },
-  { name:"ALAN", id:"ALAN-54321" },
-  { name:"MARIA", id:"MARIA-98765" },
-  { name:"JOHN", id:"JOHN-11111" }
-];
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// Render contacts
+const firebaseConfig = {
+  apiKey: "AIzaSyDCBD2gVIg9v-KqYaMFZeu_grgs3yKYfPs",
+  authDomain: "fir-chat-f8d55.firebaseapp.com",
+  projectId: "fir-chat-f8d55",
+  storageBucket: "fir-chat-f8d55.appspot.com",
+  messagingSenderId: "792896094694",
+  appId: "1:792896094694:web:dd373e5d7d2fc9ae1d5627"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let myUID,myUserId;
+let contactsList = []; // will store Firebase contacts
+
+// ---------- AUTH ----------
+onAuthStateChanged(auth, async user=>{
+  if(!user) return alert("You must be logged in first");
+  myUID = user.uid;
+
+  // get user's UserID
+  const userDoc = await db.collection("users").doc(myUID).get();
+  myUserId = userDoc.data().userId;
+
+  // load contacts
+  loadContacts();
+});
+
+// ---------- LOAD CONTACTS ----------
+function loadContacts(){
+  const colRef = collection(db,"contacts",myUID,"list");
+  onSnapshot(colRef, snap=>{
+    contactsList = [];
+    snap.forEach(doc=>{
+      contactsList.push({ name: doc.data().name, id: doc.data().userId });
+    });
+    renderContacts(contactsList);
+  });
+}
+
+// ---------- RENDER ----------
 function renderContacts(list){
   const chatList = document.getElementById("chatList");
   chatList.innerHTML="";
@@ -149,31 +186,33 @@ function renderContacts(list){
     chatList.appendChild(div);
   });
 }
-renderContacts(contacts);
 
-// ---------- SEARCH FILTER ----------
+// ---------- SEARCH ----------
 function filterContacts(text){
-  const filtered = contacts.filter(c=>
-    c.name.toLowerCase().includes(text.toLowerCase()) || 
+  const filtered = contactsList.filter(c=>
+    c.name.toLowerCase().includes(text.toLowerCase()) ||
     c.id.toLowerCase().includes(text.toLowerCase())
   );
   renderContacts(filtered);
 }
 
-// ---------- MENU ----------
 function toggleMenu(){
   const menu = document.getElementById("menu");
   menu.style.display = menu.style.display==="flex"?"none":"flex";
 }
 
-// ---------- SEARCH ----------
 function toggleSearch(){
   const search = document.getElementById("searchCard");
   search.style.display = search.style.display==="flex"?"none":"flex";
   search.querySelector("input").focus();
 }
 
-// Close menu/search when clicking outside
+// ---------- ADD CONTACT PLACEHOLDER ----------
+function addContact(){
+  alert("Add Contact clicked (we'll implement the modal next)");
+}
+
+// ---------- CLICK OUTSIDE TO CLOSE ----------
 document.addEventListener("click", e=>{
   const menu = document.getElementById("menu");
   const search = document.getElementById("searchCard");
