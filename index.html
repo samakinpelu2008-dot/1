@@ -43,6 +43,27 @@ body, html { height:100%; width:100%; background:#121b22; color:#e5ddd5; overflo
 .menu-item.deactivated { color:#777; pointer-events:none; }
 .menu-item:hover { background:#1c262b; }
 
+/* ---------- SEARCH CARD ---------- */
+#searchCard {
+  position:absolute;
+  top:60px; left:0; right:0;
+  background:#f5f5f5; /* WhatsApp-white style */
+  padding:10px 0;
+  display:none;
+  flex-direction:column;
+  z-index:5;
+}
+#searchCard input {
+  width:90%;
+  margin:0 auto;
+  display:block;
+  padding:10px 15px;
+  border-radius:25px;
+  border:none;
+  outline:none;
+  font-size:16px;
+}
+
 /* ---------- CHAT LIST ---------- */
 .chat-list {
   flex:1;
@@ -70,25 +91,6 @@ body, html { height:100%; width:100%; background:#121b22; color:#e5ddd5; overflo
   color:black;
 }
 .chat-name { font-size:16px; font-weight:bold; }
-
-/* ---------- SEARCH CARD ---------- */
-#searchCard {
-  position:absolute;
-  top:60px; left:0; right:0;
-  background:#1c262b;
-  padding:10px;
-  display:none;
-  z-index:5;
-}
-#searchCard input {
-  width:95%;
-  margin:0 auto;
-  display:block;
-  padding:10px;
-  border-radius:20px;
-  border:none;
-  outline:none;
-}
 </style>
 </head>
 
@@ -143,10 +145,12 @@ function toggleMenu(){
 
 function toggleSearch(){
   const search = document.getElementById("searchCard");
-  search.style.display = search.style.display==="block"?"none":"block";
+  search.style.display = search.style.display==="flex"?"flex":"flex";
+  search.style.display="flex";
+  search.querySelector("input").focus();
 }
 
-// Close menu when clicking outside
+// Close menu/search when clicking outside
 document.addEventListener("click", e=>{
   const menu = document.getElementById("menu");
   const search = document.getElementById("searchCard");
