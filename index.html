@@ -1,215 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TechSmartNG - Honest Reviews, Smart Choices</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 0;
-      background-color: #ffffff;
-      color: #333;
-    }
-    header {
-      background-color: #004aad;
-      color: #fff;
-      text-align: center;
-      padding: 1.5rem;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-    header h1 {
-      margin: 0;
-      color: gold;
-      font-size: 2rem;
-    }
-    header p {
-      margin: 0;
-      font-size: 1rem;
-      color: #f0f0f0;
-    }
-    nav {
-      background-color: #003a8c;
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-    nav a {
-      color: white;
-      text-decoration: none;
-      padding: 1rem;
-      font-weight: 600;
-      transition: 0.3s;
-    }
-    nav a:hover {
-      background-color: gold;
-      color: #003a8c;
-    }
-    section {
-      padding: 2rem 1rem;
-      max-width: 1000px;
-      margin: auto;
-      animation: fadeIn 1s ease-in;
-    }
-    h2 {
-      color: #004aad;
-      border-left: 5px solid gold;
-      padding-left: 0.5rem;
-    }
-    .news-item, .review-item {
-      display: flex;
-      flex-wrap: wrap;
-      margin-bottom: 2rem;
-      background: #f8f8f8;
-      border-radius: 10px;
-      overflow: hidden;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      transition: transform 0.3s ease;
-    }
-    .news-item:hover, .review-item:hover {
-      transform: translateY(-5px);
-    }
-    .news-item img, .review-item img {
-      width: 100%;
-      max-width: 300px;
-      object-fit: cover;
-    }
-    .news-content, .review-content {
-      flex: 1;
-      padding: 1rem;
-    }
-    .buy-btn {
-      display: inline-block;
-      background-color: gold;
-      color: #003a8c;
-      padding: 0.5rem 1rem;
-      border-radius: 5px;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    .buy-btn:hover {
-      background-color: #004aad;
-      color: white;
-    }
-    footer {
-      background-color: #004aad;
-      color: white;
-      text-align: center;
-      padding: 1rem;
-      margin-top: 2rem;
-    }
-    footer a {
-      color: gold;
-      text-decoration: none;
-      margin: 0 0.5rem;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @media (max-width: 700px) {
-      .news-item, .review-item {
-        flex-direction: column;
-      }
-      .news-item img, .review-item img {
-        width: 100%;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Simple Firebase Chat</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #0f172a;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+.container {
+  width: 350px;
+  background: #020617;
+  border-radius: 10px;
+  padding: 15px;
+}
+h2 { text-align: center; }
+button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 8px;
+  background: #2563eb;
+  border: none;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+input {
+  width: 100%;
+  padding: 8px;
+  margin-top: 8px;
+  border-radius: 5px;
+  border: none;
+}
+#chat {
+  display: none;
+}
+#messages {
+  height: 200px;
+  overflow-y: auto;
+  background: #020617;
+  padding: 8px;
+  border-radius: 5px;
+  margin-bottom: 8px;
+}
+.msg {
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+.room {
+  text-align: center;
+  font-size: 12px;
+  color: #94a3b8;
+}
+</style>
 </head>
 <body>
-  <header>
-    <h1>TechSmartNG</h1>
-    <p>Honest Reviews, Smart Choices</p>
-  </header>
 
-  <nav>
-    <a href="#news">News</a>
-    <a href="#reviews">Reviews</a>
-    <a href="#about">About</a>
-    <a href="#contact">Contact</a>
-  </nav>
+<div class="container">
+  <div id="home">
+    <h2>Chat Room</h2>
+    <button onclick="createRoom()">Create Chat</button>
+    <input id="roomInput" placeholder="Enter room code">
+    <button onclick="joinRoom()">Join Chat</button>
+  </div>
 
-  <section id="news">
-    <h2>Latest Tech News</h2>
+  <div id="chat">
+    <div class="room" id="roomCode"></div>
+    <div id="messages"></div>
+    <input id="messageInput" placeholder="Type message">
+    <button onclick="sendMessage()">Send</button>
+  </div>
+</div>
 
-    <div class="news-item">
-      <img src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800&q=60" alt="Samsung Galaxy S25 Leak">
-      <div class="news-content">
-        <h3>Samsung Galaxy S25 Leaks Reveal Stunning Camera Upgrades</h3>
-        <p>The upcoming Galaxy S25 promises incredible AI-powered photography and battery life improvements. Here’s what to expect from Samsung’s next flagship smartphone.</p>
-      </div>
-    </div>
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getFirestore, collection, addDoc, query,
+  orderBy, onSnapshot, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    <div class="news-item">
-      <img src="https://images.unsplash.com/photo-1604147706283-d7115a9d49a0?auto=format&fit=crop&w=800&q=60" alt="CBN fintech rules">
-      <div class="news-content">
-        <h3>CBN Introduces New Fintech Regulations in 2025</h3>
-        <p>Nigeria’s Central Bank releases fresh guidelines for fintech startups. These rules aim to improve transparency and protect investors in the digital finance sector.</p>
-      </div>
-    </div>
+const firebaseConfig = {
+  apiKey: "AIzaSyDeFlOeRoiNjqH9LAclnqnehXNY6scPqzE",
+  authDomain: "businessio-37c69.firebaseapp.com",
+  projectId: "businessio-37c69",
+  storageBucket: "businessio-37c69.firebasestorage.app",
+  messagingSenderId: "287926988132",
+  appId: "1:287926988132:web:39c6aaf2f8994406e75e71"
+};
 
-    <div class="news-item">
-      <img src="https://images.unsplash.com/photo-1606813902912-325b3fe6be85?auto=format&fit=crop&w=800&q=60" alt="Infinix Zero 30 Launch">
-      <div class="news-content">
-        <h3>Infinix Zero 30 Launches with 200MP Camera and Fast Charging</h3>
-        <p>Infinix’s latest budget flagship brings a premium camera setup and blazing-fast 120W charging to Nigeria’s midrange phone market.</p>
-      </div>
-    </div>
-  </section>
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-  <section id="reviews">
-    <h2>Featured Reviews</h2>
+let roomId = "";
+const userId = Math.random().toString(36).substring(2, 8);
 
-    <div class="review-item">
-      <img src="https://images.unsplash.com/photo-1603899123455-d6565bccc1da?auto=format&fit=crop&w=800&q=60" alt="iPhone 17 Pro">
-      <div class="review-content">
-        <h3>iPhone 17 Pro Review — Is It Worth the Hype?</h3>
-        <p>Apple’s latest iPhone 17 Pro comes with an A19 Bionic chip, better battery life, and a titanium frame. But is it worth upgrading from your iPhone 15 or 16?</p>
-        <a href="#" class="buy-btn">Buy Now</a>
-      </div>
-    </div>
+window.createRoom = () => {
+  roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
+  startChat();
+};
 
-    <div class="review-item">
-      <img src="https://images.unsplash.com/photo-1605902711622-cfb43c4437e1?auto=format&fit=crop&w=800&q=60" alt="Investment Apps">
-      <div class="review-content">
-        <h3>Top 5 Investment Apps in 2025</h3>
-        <p>Looking to grow your money? Check out our top picks for trusted investment apps — including PiggyVest, Bamboo, and Risevest — offering safe returns for Nigerians.</p>
-        <a href="#" class="buy-btn">Get App</a>
-      </div>
-    </div>
+window.joinRoom = () => {
+  const input = document.getElementById("roomInput").value.trim();
+  if (!input) return alert("Enter room code");
+  roomId = input.toUpperCase();
+  startChat();
+};
 
-    <div class="review-item">
-      <img src="https://images.unsplash.com/photo-1580910051073-8e9d9a335f2b?auto=format&fit=crop&w=800&q=60" alt="Budget Phones">
-      <div class="review-content">
-        <h3>Best Budget Phones Under ₦200,000 in 2025</h3>
-        <p>We’ve rounded up the best affordable smartphones offering strong performance, good cameras, and long-lasting battery for your budget.</p>
-        <a href="#" class="buy-btn">Shop Now</a>
-      </div>
-    </div>
-  </section>
+function startChat() {
+  document.getElementById("home").style.display = "none";
+  document.getElementById("chat").style.display = "block";
+  document.getElementById("roomCode").innerText = "Room: " + roomId;
 
-  <section id="about">
-    <h2>About TechSmartNG</h2>
-    <p>TechSmartNG is Nigeria’s trusted source for honest reviews, smart product choices, and the latest updates in technology, gadgets, and finance.  
-    Our goal is to help Nigerians make informed tech and money decisions — from smartphones to investment apps.</p>
-  </section>
+  const q = query(
+    collection(db, "rooms", roomId, "messages"),
+    orderBy("time")
+  );
 
-  <section id="contact">
-    <h2>Contact Us</h2>
-    <p>Got a question, partnership offer, or press inquiry? Reach us at:</p>
-    <p><strong>Email:</strong> <a href="mailto:techsmartng@gmail.com">techsmartng@gmail.com</a></p>
-  </section>
+  onSnapshot(q, snap => {
+    const messages = document.getElementById("messages");
+    messages.innerHTML = "";
+    snap.forEach(doc => {
+      const d = doc.data();
+      const div = document.createElement("div");
+      div.className = "msg";
+      div.textContent = (d.user === userId ? "You: " : "Them: ") + d.text;
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+    });
+  });
+}
 
-  <footer>
-    <p>&copy; 2025 TechSmartNG. All rights reserved.</p>
-    <p>
-      <a href="#">Facebook</a> | 
-      <a href="#">X (Twitter)</a> | 
-      <a href="#">Instagram</a>
-    </p>
-  </footer>
+window.sendMessage = async () => {
+  const input = document.getElementById("messageInput");
+  if (!input.value) return;
+
+  await addDoc(collection(db, "rooms", roomId, "messages"), {
+    text: input.value,
+    user: userId,
+    time: serverTimestamp()
+  });
+
+  input.value = "";
+};
+</script>
+
 </body>
 </html>
