@@ -2,237 +2,207 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>WhatsApp Style Step Chat</title>
+<title>FIR Chat</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
 <style>
 * { box-sizing: border-box; }
-html, body { margin:0; padding:0; width:100%; height:100%; font-family: system-ui, sans-serif; background: #0b141a; overflow:hidden; }
+html, body {
+  margin:0;
+  width:100%;
+  height:100%;
+  font-family: system-ui, sans-serif;
+  background:#0b141a;
+  color:#e9edef;
+  overflow:hidden;
+}
 
-/* COMMON */
-input, button { font-size:16px; border:none; outline:none; }
-button { cursor:pointer; }
+/* ---------- COMMON ---------- */
+button, input {
+  border:none;
+  outline:none;
+  font-size:16px;
+}
+button {
+  background:#25d366;
+  padding:12px;
+  border-radius:8px;
+  font-weight:bold;
+  cursor:pointer;
+}
+input {
+  padding:14px;
+  border-radius:8px;
+  background:#202c33;
+  color:white;
+}
 
-/* ----- STEP PAGES ----- */
-.step-page { display:none; height:100%; width:100%; justify-content:center; align-items:center; }
-.step-card { width:90%; max-width:400px; background:#111b21; padding:30px; border-radius:12px; display:flex; flex-direction:column; gap:15px; }
-.step-card input { padding:12px; border-radius:8px; background:#202c33; color:white; }
-.step-card button { padding:12px; border-radius:8px; background:#25d366; font-weight:bold; }
+/* ---------- PAGES ---------- */
+.page {
+  display:none;
+  height:100%;
+  width:100%;
+  justify-content:center;
+  align-items:center;
+}
 
-/* ----- CHAT HALL ----- */
-#chat-hall { display:none; height:100%; width:100%; flex-direction:column; background:#0b141a; }
-#hall-header { height:60px; background:#202c33; display:flex; align-items:center; justify-content:center; color:#e9edef; font-size:16px; flex-shrink:0; }
-#contacts { flex:1; overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:8px; }
-.contact-card { background:#111b21; padding:10px; border-radius:10px; display:flex; align-items:center; gap:10px; cursor:pointer; }
-.avatar { width:40px; height:40px; border-radius:50%; background:#25d366; color:white; font-weight:bold; font-size:24px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.card {
+  width:90%;
+  max-width:420px;
+  background:#111b21;
+  padding:30px;
+  border-radius:12px;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
 
-/* ----- CHAT PAGE ----- */
-#chat-page { display:none; height:100%; width:100%; flex-direction:column; }
-.header { height:60px; background:#202c33; display:flex; align-items:center; justify-content:center; color:#e9edef; font-size:16px; flex-shrink:0; }
-#messages { flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:6px; padding:15px; background:#0b141a; }
-.message { max-width:75%; padding:10px 14px; font-size:14px; border-radius:8px; line-height:1.4; word-wrap:break-word; display:flex; align-items:center; gap:8px; }
-.me { align-self:flex-end; background:#005c4b; border-bottom-right-radius:2px; }
-.them { align-self:flex-start; background:#202c33; border-bottom-left-radius:2px; }
-.input-bar { height:60px; background:#202c33; display:flex; align-items:center; padding:8px; gap:8px; flex-shrink:0; }
-.input-bar input { flex:1; height:42px; border-radius:21px; background:#2a3942; color:white; padding:0 15px; font-size:15px; }
-.input-bar button { width:42px; height:42px; border-radius:50%; background:#25d366; font-size:18px; cursor:pointer; border:none; }
+/* ---------- CHAT HALL ---------- */
+#hall {
+  display:none;
+  flex-direction:column;
+  height:100%;
+}
+
+.header {
+  height:60px;
+  background:#202c33;
+  display:flex;
+  align-items:center;
+  padding:0 15px;
+  font-weight:bold;
+}
+
+.avatar {
+  width:48px;
+  height:48px;
+  border-radius:50%;
+  background:#25d366;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:28px;
+  font-weight:900;
+  color:white;
+}
 </style>
 </head>
+
 <body>
 
-<!-- STEP 1: PHONE -->
-<div id="step-phone" class="step-page" style="display:flex;">
-  <div class="step-card">
-    <h2>Enter Phone Number</h2>
-    <input type="text" id="phone" placeholder="+2341234567890">
-    <button onclick="nextPhone()">Next</button>
+<!-- LOGIN -->
+<div id="login" class="page" style="display:flex;">
+  <div class="card">
+    <h2>Login</h2>
+    <input id="loginEmail" placeholder="Email">
+    <input id="loginPassword" type="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+    <p onclick="goRegister()" style="cursor:pointer;">Create account</p>
   </div>
 </div>
 
-<!-- STEP 2: USERNAME -->
-<div id="step-username" class="step-page">
-  <div class="step-card">
-    <h2>Choose Username</h2>
-    <input type="text" id="username" placeholder="Enter username">
-    <button onclick="nextUsername()">Next</button>
-  </div>
-</div>
-
-<!-- STEP 3: PASSWORD -->
-<div id="step-password" class="step-page">
-  <div class="step-card">
-    <h2>Set Password</h2>
-    <input type="password" id="password" placeholder="Enter password">
-    <button onclick="finishRegistration()">Finish</button>
+<!-- REGISTER -->
+<div id="register" class="page">
+  <div class="card">
+    <h2>Register</h2>
+    <input id="regEmail" placeholder="Email">
+    <input id="regPassword" type="password" placeholder="Password">
+    <input id="regUsername" placeholder="Username">
+    <button onclick="register()">Create Account</button>
   </div>
 </div>
 
 <!-- CHAT HALL -->
-<div id="chat-hall">
-  <div id="hall-header">Chat Hall</div>
-  <div id="contacts"></div>
-</div>
-
-<!-- CHAT PAGE -->
-<div id="chat-page">
-  <div class="header" id="chat-header"></div>
-  <div id="messages"></div>
-  <div class="input-bar">
-    <input id="messageInput" placeholder="Type a message">
-    <button onclick="sendMessage()">➤</button>
+<div id="hall">
+  <div class="header">
+    <div id="hallAvatar" class="avatar"></div>
+    <span id="hallName" style="margin-left:12px;"></span>
   </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, collection, addDoc, query, orderBy, onSnapshot, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDeFlOeRoiNjqH9LAclnqnehXNY6scPqzE",
-  authDomain: "businessio-37c69.firebaseapp.com",
-  projectId: "businessio-37c69",
-  storageBucket: "businessio-37c69.firebasestorage.app",
-  messagingSenderId: "287926988132",
-  appId: "1:287926988132:web:39c6aaf2f8994406e75e71"
+  apiKey: "AIzaSyDCBD2gVIg9v-KqYaMFZeu_grgs3yKYfPs",
+  authDomain: "fir-chat-f8d55.firebaseapp.com",
+  projectId: "fir-chat-f8d55",
+  storageBucket: "fir-chat-f8d55.firebasestorage.app",
+  messagingSenderId: "792896094694",
+  appId: "1:792896094694:web:dd373e5d7d2fc9ae1d5627"
 };
 
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 const db = getFirestore(app);
 
-let currentUser = null;
-let currentChatId = null;
+/* ---------- NAV ---------- */
+function show(id){
+  document.querySelectorAll(".page,#hall").forEach(p=>p.style.display="none");
+  document.getElementById(id).style.display="flex";
+}
 
-// ===== STEP FUNCTIONS =====
-async function nextPhone() {
-  const phone = document.getElementById("phone").value.trim();
-  if(!phone) return alert("Enter a valid phone number");
+window.goRegister = () => show("register");
 
-  // Basic phone validation
-  const phonePattern = /^\+?\d{10,15}$/;
-  if(!phonePattern.test(phone)) return alert("Enter a valid phone number with country code");
+/* ---------- REGISTER ---------- */
+window.register = async () => {
+  const email = regEmail.value.trim();
+  const password = regPassword.value.trim();
+  const username = regUsername.value.trim();
 
-  try {
-    const userRef = doc(db,"users",phone);
-    const userSnap = await getDoc(userRef);
+  if(!email || !password || !username) {
+    alert("Fill all fields");
+    return;
+  }
 
-    if(userSnap.exists()) {
-      // Existing user → go to password step
-      currentUser = { phone, username: userSnap.data().username };
-      document.getElementById("step-phone").style.display = "none";
-      document.getElementById("step-password").style.display = "flex";
-    } else {
-      // New user → go to username step
-      currentUser = { phone };
-      document.getElementById("step-phone").style.display = "none";
-      document.getElementById("step-username").style.display = "flex";
+  const cred = await createUserWithEmailAndPassword(auth, email, password);
+  const uid = cred.user.uid;
+
+  await setDoc(doc(db,"users",uid),{
+    email,
+    username,
+    searchKey: username.toLowerCase(),
+    createdAt: serverTimestamp()
+  });
+
+  loadHall(username);
+};
+
+/* ---------- LOGIN ---------- */
+window.login = async () => {
+  const email = loginEmail.value.trim();
+  const password = loginPassword.value.trim();
+  await signInWithEmailAndPassword(auth,email,password);
+};
+
+/* ---------- SESSION ---------- */
+onAuthStateChanged(auth, async user=>{
+  if(user){
+    const snap = await getDoc(doc(db,"users",user.uid));
+    if(snap.exists()){
+      loadHall(snap.data().username);
     }
-  } catch (err) {
-    console.error(err);
-    alert("Error accessing database. Check your connection.");
   }
-}
+});
 
-function nextUsername() {
-  const username = document.getElementById("username").value.trim();
-  if(!username) return alert("Enter username");
-  currentUser.username = username;
-  document.getElementById("step-username").style.display = "none";
-  document.getElementById("step-password").style.display = "flex";
-}
-
-async function finishRegistration() {
-  const password = document.getElementById("password").value.trim();
-  if(!password) return alert("Enter password");
-  currentUser.password = password;
-
-  const userRef = doc(db,"users",currentUser.phone);
-  const userSnap = await getDoc(userRef);
-
-  if(!userSnap.exists()){
-    // New user → register
-    await setDoc(userRef,{
-      username: currentUser.username,
-      password: currentUser.password,
-      contacts:[]
-    });
-  } else {
-    // Existing user → validate password
-    if(userSnap.data().password !== password) return alert("Wrong password");
-    currentUser.username = userSnap.data().username;
-  }
-
-  openChatHall();
-}
-
-// ===== CHAT HALL =====
-async function openChatHall() {
-  document.getElementById("step-password").style.display = "none";
-  document.getElementById("chat-hall").style.display = "flex";
-
-  const contactsDiv = document.getElementById("contacts");
-
-  // Listen to your contacts
-  const userRef = doc(db,"users",currentUser.phone);
-  const userSnap = await getDoc(userRef);
-  const contacts = userSnap.data().contacts || [];
-
-  // Show contacts as clickable cards
-  contactsDiv.innerHTML = "";
-  for(let phone of contacts) {
-    const cSnap = await getDoc(doc(db,"users",phone));
-    if(!cSnap.exists()) continue;
-    const contact = cSnap.data();
-    const div = document.createElement("div");
-    div.className = "contact-card";
-    div.innerHTML = `<div class="avatar">${contact.username[0].toUpperCase()}</div>${contact.username}`;
-    div.onclick = ()=>openChat(phone,contact.username);
-    contactsDiv.appendChild(div);
-  }
-}
-
-// ===== OPEN CHAT =====
-async function openChat(phone,username) {
-  document.getElementById("chat-hall").style.display = "none";
-  document.getElementById("chat-page").style.display = "flex";
-  document.getElementById("chat-header").innerText = username;
-
-  // Chat ID = sorted phone numbers
-  currentChatId = [currentUser.phone,phone].sort().join("_");
-  const messagesRef = collection(db,"chats",currentChatId,"messages");
-  const q = query(messagesRef, orderBy("time"));
-
-  onSnapshot(q,snap=>{
-    const messagesBox = document.getElementById("messages");
-    messagesBox.innerHTML = "";
-    snap.forEach(docSnap=>{
-      const msg = docSnap.data();
-      const div = document.createElement("div");
-      div.className = "message " + (msg.phone===currentUser.phone?"me":"them");
-      div.innerHTML = `<div class="avatar">${msg.username[0].toUpperCase()}</div>${msg.text}`;
-      messagesBox.appendChild(div);
-    });
-    messagesBox.scrollTop = messagesBox.scrollHeight;
-  });
-}
-
-// ===== SEND MESSAGE =====
-async function sendMessage() {
-  const input = document.getElementById("messageInput");
-  if(!input.value) return;
-
-  const messagesRef = collection(db,"chats",currentChatId,"messages");
-  await addDoc(messagesRef,{
-    text: input.value,
-    phone: currentUser.phone,
-    username: currentUser.username,
-    time: Date.now()
-  });
-
-  // Add contact if new
-  const otherPhone = currentChatId.split("_").find(p=>p!==currentUser.phone);
-  const userRef = doc(db,"users",currentUser.phone);
-  await updateDoc(userRef,{contacts: arrayUnion(otherPhone)});
-
-  input.value = "";
+/* ---------- CHAT HALL ---------- */
+function loadHall(username){
+  show("hall");
+  hallAvatar.textContent = username[0].toUpperCase();
+  hallName.textContent = username;
 }
 </script>
 
