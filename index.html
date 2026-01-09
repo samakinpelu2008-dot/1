@@ -2,234 +2,128 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>IEM Chat</title>
+<title>WhatsApp-style Chat Hall</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <style>
-*{box-sizing:border-box;font-family:Arial}
-body,html{margin:0;height:100%;background:#0b141a;color:white;overflow:hidden}
-input,button{padding:12px;border:none;border-radius:20px}
-button{background:#25d366;color:black;font-weight:bold;cursor:pointer}
-.screen{display:none;height:100%;width:100%}
-.center{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:15px}
+* { box-sizing:border-box; margin:0; padding:0; font-family: system-ui, sans-serif; }
+body, html { height:100%; width:100%; background:#121b22; color:#e5ddd5; overflow:hidden; }
 
-.header{
+/* ---------- TOP APP BAR ---------- */
+.appbar {
   height:60px;
-  background:#202c33;
+  background:#075E54;
   display:flex;
   align-items:center;
-  padding:0 15px;
-  gap:15px;
+  justify-content:space-between;
+  padding:0 12px;
+  position:relative;
+  flex-shrink:0;
 }
+.appbar .left { font-size:20px; font-weight:bold; }
+.appbar .right { display:flex; align-items:center; gap:16px; }
+.icon { cursor:pointer; font-size:22px; }
 
-.list{overflow-y:auto;height:calc(100% - 60px)}
-.contact{
-  padding:15px;
-  border-bottom:1px solid #333;
-  display:flex;
-  align-items:center;
-  gap:15px;
+/* ---------- DROPDOWN MENU ---------- */
+.menu-dropdown {
+  position:absolute;
+  top:60px;
+  right:12px;
+  background:#262f34;
+  border-radius:8px;
+  overflow:hidden;
+  display:none;
+  flex-direction:column;
+  width:160px;
+  z-index:10;
+}
+.menu-item {
+  padding:12px 16px;
   cursor:pointer;
 }
-.avatar{
-  width:45px;height:45px;
-  background:#25d366;
-  border-radius:50%;
+.menu-item:hover { background:#1c262b; }
+
+/* ---------- CHAT LIST ---------- */
+.chat-list {
+  flex:1;
+  overflow-y:auto;
+  background:#121b22;
+}
+.chat-item {
   display:flex;
   align-items:center;
+  padding:12px 16px;
+  gap:12px;
+  cursor:pointer;
+  border-bottom:1px solid #1e2a2f;
+}
+.chat-item:hover { background:#1c262b; }
+.avatar {
+  width:50px; height:50px;
+  border-radius:50%;
+  background:#25d366;
+  display:flex;
   justify-content:center;
+  align-items:center;
   font-size:22px;
   font-weight:bold;
   color:black;
 }
-
-.message{
-  max-width:70%;
-  padding:10px;
-  border-radius:10px;
-  margin:6px;
-}
-.me{background:#25d366;color:black;margin-left:auto}
-.other{background:#202c33}
-
-#messages{flex:1;overflow-y:auto;padding:10px}
-.inputBar{
-  display:flex;
-  padding:10px;
-  gap:10px;
-  background:#202c33;
-}
-input{flex:1}
+.chat-name { font-size:16px; font-weight:bold; }
 </style>
 </head>
 
 <body>
+<div id="chatHall" style="display:flex;flex-direction:column;height:100%;">
 
-<!-- LOGIN -->
-<div id="login" class="screen center">
-  <h2>Register / Login</h2>
-  <input id="email" placeholder="Email">
-  <input id="password" placeholder="Password" type="password">
-  <input id="username" placeholder="Username">
-  <button onclick="register()">Continue</button>
-</div>
+  <!-- TOP BAR -->
+  <div class="appbar">
+    <div class="left">IEM Chat</div>
+    <div class="right">
+      <div class="icon">🔍</div>
+      <div class="icon" onclick="toggleMenu()">⋮</div>
+    </div>
 
-<!-- CHAT HALL -->
-<div id="hall" class="screen">
-  <div class="header">
-    <b>IEM Chat</b>
-    <span style="margin-left:auto;cursor:pointer" onclick="addContact()">➕</span>
+    <!-- DROPDOWN MENU -->
+    <div id="menu" class="menu-dropdown">
+      <div class="menu-item" onclick="alert('Add Contact')">Add Contact</div>
+      <div class="menu-item" onclick="alert('My User ID')">My User ID</div>
+      <div class="menu-item" onclick="alert('Settings')">Settings</div>
+    </div>
   </div>
-  <div id="contacts" class="list"></div>
-</div>
 
-<!-- CHAT -->
-<div id="chat" class="screen" style="display:flex;flex-direction:column">
-  <div class="header">
-    <span onclick="back()">←</span>
-    <b id="chatName"></b>
+  <!-- CHAT LIST -->
+  <div id="chatList" class="chat-list">
+    <div class="chat-item">
+      <div class="avatar">S</div>
+      <div class="chat-name">SAMU-12345</div>
+    </div>
+    <div class="chat-item">
+      <div class="avatar">A</div>
+      <div class="chat-name">ALAN-54321</div>
+    </div>
+    <div class="chat-item">
+      <div class="avatar">M</div>
+      <div class="chat-name">MARIA-98765</div>
+    </div>
   </div>
-  <div id="messages"></div>
-  <div class="inputBar">
-    <input id="msg">
-    <button onclick="send()">Send</button>
-  </div>
+
 </div>
 
-<!-- ADD CONTACT -->
-<div id="add" class="screen center">
-  <h3>Add Contact</h3>
-  <input id="contactId" placeholder="User ID">
-  <button onclick="saveContact()">Save</button>
-  <button onclick="show('hall')">Cancel</button>
-</div>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-import {
-  getFirestore,
-  doc,setDoc,getDoc,addDoc,
-  collection,onSnapshot,query,orderBy,serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDCBD2gVIg9v-KqYaMFZeu_grgs3yKYfPs",
-  authDomain: "fir-chat-f8d55.firebaseapp.com",
-  projectId: "fir-chat-f8d55",
-  storageBucket: "fir-chat-f8d55.appspot.com",
-  messagingSenderId: "792896094694",
-  appId: "1:792896094694:web:dd373e5d7d2fc9ae1d5627"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-let myUID,myUserId,currentChat;
-
-/* UI */
-function show(id){
-  document.querySelectorAll(".screen").forEach(s=>s.style.display="none");
-  document.getElementById(id).style.display="flex";
+<script>
+function toggleMenu(){
+  const menu = document.getElementById("menu");
+  menu.style.display = menu.style.display==="flex"?"none":"flex";
 }
-show("login");
 
-/* REGISTER / LOGIN */
-window.register = async()=>{
-  const e=email.value,p=password.value,u=username.value;
-  try{
-    const r=await createUserWithEmailAndPassword(auth,e,p);
-    const uid=r.user.uid;
-    const userId=u.slice(0,4).toUpperCase()+"-"+Math.floor(10000+Math.random()*90000);
-    await setDoc(doc(db,"users",uid),{username:u,userId});
-  }catch{
-    await signInWithEmailAndPassword(auth,e,p);
+// Close menu when clicking outside
+document.addEventListener("click", e=>{
+  const menu = document.getElementById("menu");
+  const icon = document.querySelector(".appbar .icon:nth-child(2)");
+  if(!menu.contains(e.target) && !icon.contains(e.target)){
+    menu.style.display="none";
   }
-};
-
-/* AUTH STATE */
-onAuthStateChanged(auth,async u=>{
-  if(!u)return;
-  myUID=u.uid;
-  const snap=await getDoc(doc(db,"users",myUID));
-  myUserId=snap.data().userId;
-  loadContacts();
-  show("hall");
 });
-
-/* CONTACTS */
-function loadContacts(){
-  onSnapshot(collection(db,"contacts",myUID,"list"),snap=>{
-    contacts.innerHTML="";
-    snap.forEach(d=>{
-      const c=d.data();
-      const div=document.createElement("div");
-      div.className="contact";
-      div.innerHTML=`
-        <div class="avatar">${c.name[0]}</div>
-        <div>${c.name}</div>
-      `;
-      div.onclick=()=>openChat(d.id,c.name);
-      contacts.appendChild(div);
-    });
-  });
-}
-
-/* ADD CONTACT */
-window.addContact=()=>show("add");
-window.saveContact=async()=>{
-  const uid=contactId.value;
-  const q=await getDoc(doc(db,"users",uid));
-  if(!q.exists())return alert("User not found");
-  await setDoc(doc(db,"contacts",myUID,"list",uid),{
-    name:q.data().username,
-    userId:q.data().userId
-  });
-  show("hall");
-};
-
-/* CHAT */
-function chatId(a,b){return a<b?a+"_"+b:b+"_"+a}
-window.openChat=(uid,name)=>{
-  currentChat=chatId(myUID,uid);
-  chatName.textContent=name;
-  messages.innerHTML="";
-  show("chat");
-
-  onSnapshot(
-    query(collection(db,"chats",currentChat,"msgs"),orderBy("createdAt")),
-    s=>{
-      messages.innerHTML="";
-      s.forEach(d=>{
-        const m=d.data();
-        const div=document.createElement("div");
-        div.className="message "+(m.sender===myUID?"me":"other");
-        div.textContent=m.text;
-        messages.appendChild(div);
-      });
-      messages.scrollTop=messages.scrollHeight;
-    }
-  );
-};
-
-window.send=async()=>{
-  if(!msg.value)return;
-  await addDoc(collection(db,"chats",currentChat,"msgs"),{
-    sender:myUID,
-    text:msg.value,
-    createdAt:serverTimestamp()
-  });
-  msg.value="";
-};
-
-window.back=()=>show("hall");
 </script>
+
 </body>
-  </html>
+</html>
